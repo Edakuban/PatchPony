@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-containers:
+    name: Build, test, and build containers
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore PatchPony.slnx
+
+      - name: Build
+        run: dotnet build PatchPony.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test PatchPony.slnx --configuration Release --no-build --no-restore
+
+      - name: Build gateway container
+        run: docker build --file src/PatchPony.Gateway/Dockerfile --tag patchpony-gateway:ci .
+
+      - name: Build worker container
+        run: docker build --file src/PatchPony.Worker/Dockerfile --tag patchpony-worker:ci .
+
+      - name: Scan gateway container
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: patchpony-gateway:ci
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          scanners: vuln
+          timeout: 10m0s
+
+      - name: Scan worker container
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: patchpony-worker:ci
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          scanners: vuln
+          timeout: 10m0s
+          skip-setup-trivy: true

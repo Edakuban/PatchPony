@@ -398,7 +398,10 @@ Ziel: Die internen Read-only-Fähigkeiten stehen über wohldefinierte MCP-Tools 
 - [ ] `I4.8` Cancellation und Timeouts bis in Datei- und Suchoperationen weiterreichen.
 - [ ] `I4.9` Toolschemas als stabile Verträge testen.
 - [ ] `I4.10` MCP-Inspector- und Conformance-Tests einrichten.
-- [ ] `I4.11` OpenAPI-Dokument für die REST-API erzeugen.
+- [ ] `I4.11` OpenAPI-Dokument für die REST-API erzeugen und aktuell halten.
+  - Swagger UI ausschließlich im lokalen Entwicklungsmodus bereitstellen.
+  - In Produktion OpenAPI-JSON nur intern oder nach Authentifizierung verfügbar machen.
+  - Authentifizierungsschema, Fehlerformate und repräsentative Beispielrequests dokumentieren.
 
 ### 10.2 REST-Schnittstellen der ersten Version
 

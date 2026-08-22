@@ -1,0 +1,15 @@
+.git
+.github
+.vs
+.idea
+.tmp
+bin
+obj
+**/bin
+**/obj
+TestResults
+.env
+.env.*
+!.env.example
+*.user
+*.suo

@@ -8,8 +8,7 @@ Implementierungsstand fest, bis die jeweilige Iteration abgeschlossen ist.
 
 ## Nächster konkreter Schritt
 
-`I1.6` – Gateway-Health-Endpunkte implementieren und testen. Danach kann der
-erste lokale Docker-Compose-Start verifiziert werden.
+`I1-Abnahme` – Änderungen pushen und den ersten erfolgreichen GitHub-CI-Lauf bestätigen; danach beginnt I2.
 
 ## I0 – Entscheidungen und Projektvorbereitung
 
@@ -36,15 +35,15 @@ erste lokale Docker-Compose-Start verifiziert werden.
 | I1.1 Repository | erledigt | Lokales Git-Repository, `origin` auf GitHub-Repository. |
 | I1.2 Solution und Projekte | erledigt | .NET-10-Solution mit Core, Contracts, Infrastructure, Gateway, Worker und CLI. |
 | I1.3 Testprojekte | erledigt | Core-, Integration-, Policy- und Security-Testprojekt angelegt. |
-| I1.4 Build-Konfiguration | teilweise erledigt | `Directory.Build.props`, `.editorconfig` und `.gitignore` vorhanden; zentrale Paketverwaltung ist noch offen. |
+| I1.4 Build-Konfiguration | erledigt | `Directory.Build.props`, `.editorconfig`, `.gitignore` und zentrale Paketverwaltung vorhanden. |
 | I1.5 Compiler-Leitplanken | erledigt | Nullable, deterministische Builds und Warnings-as-Errors aktiviert. |
-| I1.6 Gateway-Health | offen – als Nächstes | Health-Endpunkte und zugehörige Tests implementieren. |
-| I1.7 Worker | teilweise erledigt | Worker-Skeleton als `BackgroundService` vorhanden. |
+| I1.6 Gateway-Health | erledigt | `/health/live` und `/health/ready` sowie WebApplicationFactory-Integrationstests vorhanden. |
+| I1.7 Worker | erledigt | Worker als .NET-`BackgroundService` und eigener non-root-Container vorhanden. |
 | I1.8 Dockerfiles | erledigt | Gateway und Worker: Multi-Stage, non-root. |
-| I1.9 Docker Compose | teilweise erledigt | PostgreSQL, Gateway und Worker beschrieben; Health-Checks folgen mit I1.6. |
+| I1.9 Docker Compose | erledigt | PostgreSQL, Gateway und Worker sind lokal gebaut, gestartet und melden alle `healthy`; Gateway-Probes liefern `200`. |
 | I1.10 Lokale Konfiguration | erledigt | `.env.example` dokumentiert, `.env` zuverlässig ignoriert. |
-| I1.11 CI | offen | GitHub Actions für Restore, Build, Test, Container-Build. |
-| I1.12 Scans | offen | Dependency- und Image-Scanning. |
+| I1.11 CI | erledigt | GitHub Actions für Restore, Release-Build, Tests und beide Container-Builds angelegt. |
+| I1.12 Scans | erledigt | NuGet-Audit für direkte und transitive Abhängigkeiten sowie Trivy-Scans der Gateway- und Worker-Images in CI. |
 
 ## Sicherheitsgrenze
 
