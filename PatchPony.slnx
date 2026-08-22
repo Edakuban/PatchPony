@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PatchPony.Cli/PatchPony.Cli.csproj" />
+    <Project Path="src/PatchPony.Contracts/PatchPony.Contracts.csproj" />
+    <Project Path="src/PatchPony.Core/PatchPony.Core.csproj" />
+    <Project Path="src/PatchPony.Gateway/PatchPony.Gateway.csproj" />
+    <Project Path="src/PatchPony.Infrastructure/PatchPony.Infrastructure.csproj" />
+    <Project Path="src/PatchPony.Worker/PatchPony.Worker.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PatchPony.Core.Tests/PatchPony.Core.Tests.csproj" />
+    <Project Path="tests/PatchPony.IntegrationTests/PatchPony.IntegrationTests.csproj" />
+    <Project Path="tests/PatchPony.PolicyTests/PatchPony.PolicyTests.csproj" />
+    <Project Path="tests/PatchPony.SecurityTests/PatchPony.SecurityTests.csproj" />
+  </Folder>
+</Solution>
