@@ -6,7 +6,7 @@ RUN dotnet publish src/PatchPony.Gateway/PatchPony.Gateway.csproj --configuratio
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
-RUN addgroup -S patchpony && adduser -S patchpony -G patchpony
+RUN apk add --no-cache ripgrep && addgroup -S patchpony && adduser -S patchpony -G patchpony
 COPY --from=build /app/publish .
 USER patchpony
 EXPOSE 8080

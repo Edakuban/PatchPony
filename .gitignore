@@ -9,3 +9,8 @@ TestResults/
 .env.*
 !.env.example
 artifacts/
+.tmp/
+
+PatchPony-logo-v2.png
+PatchPony-logo-v3.png
+PatchPony-one-award-pitch.pptx

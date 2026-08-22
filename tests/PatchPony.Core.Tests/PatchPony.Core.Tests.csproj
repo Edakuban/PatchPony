@@ -18,4 +18,8 @@
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PatchPony.Core\PatchPony.Core.csproj" />
+  </ItemGroup>
+
 </Project>

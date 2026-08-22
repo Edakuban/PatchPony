@@ -1,14 +1,14 @@
 # PatchPony – Umsetzungsstand
 
 Letzte Aktualisierung: 2026-08-22  
-Aktive Iterationen: I0 und I1
+Aktive Iterationen: I0, I1, I2 und I3
 
 Dieses Dokument ergänzt [PLAN.md](PLAN.md). Es hält den tatsächlichen
 Implementierungsstand fest, bis die jeweilige Iteration abgeschlossen ist.
 
 ## Nächster konkreter Schritt
 
-`I1-Abnahme` – Änderungen pushen und den ersten erfolgreichen GitHub-CI-Lauf bestätigen; danach beginnt I2.
+`I4.8` – Cancellation und Timeouts bis in Datei- und Suchoperationen weiterreichen.
 
 ## I0 – Entscheidungen und Projektvorbereitung
 
@@ -45,8 +45,52 @@ Implementierungsstand fest, bis die jeweilige Iteration abgeschlossen ist.
 | I1.11 CI | erledigt | GitHub Actions für Restore, Release-Build, Tests und beide Container-Builds angelegt. |
 | I1.12 Scans | erledigt | NuGet-Audit für direkte und transitive Abhängigkeiten sowie Trivy-Scans der Gateway- und Worker-Images in CI. |
 
+## I2 – Domänenmodell, Persistenz und Job-Lifecycle
+
+| Paket | Status | Stand |
+|---|---|---|
+| I2.1 Aggregate und Value Objects | erledigt | Transportfreier Core für Projekte, Repositoryregistrierung, Jobs, Sessions, Approvals, Artefakte, Toolinvocations und Idempotenzrecords. |
+| I2.2 Job-Zustandsmaschine | erledigt | Explizite erlaubte und verbotene Übergänge mit Statusänderungsereignissen und Unit-Tests. |
+| I2.3 Fehlercodes und Ergebnisse | erledigt | Stabile `validation.invalid`, `job.transition.invalid` und `job.transition.noop`-Ergebnisse. |
+| I2.4 PostgreSQL und Migration | erledigt | EF Core 10 mit Npgsql, `patchpony`-Schema, Mapping für die I2-Entitäten sowie versionierte Initialmigration. |
+| I2.5 Application Services und Repositories | erledigt | Core-Ports und EF-Repositoryadapter für Projekte, Jobs und Sessions; Application Services erzwingen Projekt- und Lifecycle-Regeln. |
+| I2.6 Idempotenzservice | erledigt | Atomarer PostgreSQL-Adapter legt Job und Idempotenzrecord zusammen an; derselbe Schlüssel liefert den ursprünglich angelegten Job. |
+| I2.7 Datenbankbasierte Job-Queue | erledigt | Persistente `job_queue` mit Fälligkeit, eindeutiger Job-Referenz und geordneter Ready-Abfrage; Claiming folgt separat. |
+| I2.8 Job-Claiming | erledigt | PostgreSQL-Claim mit `FOR UPDATE SKIP LOCKED`, Claim-Token, Worker-ID und ablaufender Lease; abgelaufene Jobs können neu geclaimt werden. |
+| I2.9 Audit-Schnittstelle | erledigt | Validierter Core-Port und EF-Adapter hängen Ereignisse ausschließlich an; PostgreSQL-Trigger blockiert Updates und Deletes. |
+| I2.10 Correlation-ID | erledigt | Gateway übernimmt/generiert `X-Correlation-ID`, Core verwaltet transportfreie Scopes, Audit schreibt die aktive ID und Worker setzt eigene Verarbeitungs-Scopes. |
+| I2.11 Retention | erledigt | Reine Vorschau abgelaufener Sessions und Idempotenzrecords; kein automatischer oder verfügbarer Löschpfad. |
+## I3 – Projektkatalog und sichere Read-only-Runtime
+
+| Paket | Status | Stand |
+|---|---|---|
+| I3.1 Projektmanifest und JSON Schema | erledigt | Version-1-Schema, dokumentierte Sicherheitsregeln und ein vollständiges Beispiel für `.patchpony/project.yaml` angelegt. |
+| I3.2 Manifest-Deserialisierung und Schema-Validierung | erledigt | Begrenzter, fail-closed YAML-Loader blockiert Aliase/Anchors/Tags und unbekannte Felder; JSON Schema wird aus einer eingebetteten Ressource ausgewertet. |
+| I3.3 Projektregistrierung | erledigt | Manifest-ID wird eindeutig gespeichert; Repository-URL und Default-Branch werden atomar mitregistriert. |
+| I3.4 kontrollierter Base-Checkout | erledigt | Git wird ohne Shell mit festen Argumenten ausgeführt; nur registrierte HTTPS/SSH-Remotes und der registrierte Branch werden geklont/fetched. |
+| I3.5 Repository-Revisionen | erledigt | Der Base-Checkout löst nach Detached Checkout `HEAD^{commit}` auf und gibt ausschließlich eine validierte vollständige Commit-ID zurück. |
+| I3.6 kanonische Pfadauflösung | erledigt | Relative Pfade werden an einem serverseitigen Checkout-Root kanonisch aufgelöst; Fehler geben keine Host-Pfade preis. |
+| I3.7 Pfad- und Symlink-Härtung | erledigt | `..`, absolute Pfade und Backslashes werden verworfen; Links müssen mit ihrem finalen Ziel im Checkout bleiben. |
+| I3.8 Manifest-Pfad-Policy | erledigt | Glob-Policy wertet `readable`, `writable` und `forbidden` fail-closed aus; der I3-Base-Checkout bleibt technisch read-only. |
+| I3.9 Skill-Katalog und Skill-Reader | erledigt | Fester read-only Skill-Pfad, Policy-/Symlink-Prüfung, ID-Validierung sowie UTF-8- und Größenlimits ohne Ausführung von Inhalten. |
+| I3.10 Projektbaum | erledigt | Read-only Baum mit Policy-Prüfung, Tiefen-, Eintrags- und Dateigrößenlimits; Symlink-Verzeichnisse werden nicht traversiert. |
+| I3.11 Source-Suche | erledigt | Literal-`rg` mit festen Argumenten, Policy-geprüften Kandidaten und Datei-, Treffer-, Ausgabe- sowie Zeitlimits. |
+| I3.12 Source-Reader | erledigt | Policy-geprüfter UTF-8-Reader mit 128-KiB- und 500-Zeilen-Limit; Binär- und ungültige Dateien werden abgewiesen. |
+| I3.13 Lokale CLI | erledigt | `project validate` und `project diagnose` validieren Manifest und Read-only-Baum ohne Schreib-, Git- oder Netzwerkausführung. |
+| I3.14 Knowledge Source | erledigt | Separat persistierter, projektgebundener `vault` mit kontrolliertem Git-Checkout und unveränderlicher Commit-Revision. |
+| I3.15 Vault-Inhalte | erledigt | Revisionsgebundener, sicherer Baum sowie Markdown-Reader und literale Suche mit festen Pfad-, Größen- und Trefferlimits. |
+| I3.16 Vault-Links | erledigt | Rein textuelle Wiki-/Markdown-Linkauflösung und revisionsgebundene Backlinks ohne Plugin- oder Netzwerkausführung. |
+| I4.1 MCP C# SDK | erledigt | Offizielles `ModelContextProtocol.AspNetCore` 2.2.0 zentral gepinnt und MCP-Serverdienste im Gateway registriert. |
+| I4.2 MCP über HTTP | erledigt | Stateless Streamable-HTTP-Transport unter `POST /mcp`, einschließlich Aushandlungstest. |
+| I4.3 REST-Versionierung | erledigt | Stabile `/api/v1`-Route-Group mit Discovery-Endpunkt; unversionierte API-Routen bleiben ausgeschlossen. |
+| I4.4 MCP-Tools | erledigt | `runtime.status` als read-only, idempotenter MCP-Adapter auf den Core-Korrelationskontext; Discovery und Aufruf getestet. |
+| I4.5 REST für n8n | erledigt | `GET /api/v1/runtime/status` ist der getestete REST-Gegenpart zu `runtime.status` und nutzt denselben Core-Handler. |
+| I4.6 API-Fehler | erledigt | Domainfehler werden transportübergreifend mit Code, Message und Korrelations-ID abgebildet; REST-Status und MCP-`isError` getestet. |
+| I4.7 Gateway-Limits | erledigt | Feste Target-, Body-, Ergebnis- und gemeinsame Parallelitätslimits für MCP und REST mit einheitlichen Fehlern. |
+| I4.8 | offen – als Nächstes | Cancellation und Timeouts bis in Datei- und Suchoperationen weiterreichen. |
+
 ## Sicherheitsgrenze
 
-Bis I1 abgeschlossen ist, besitzt PatchPony keine Projekt-, Schreib-, Shell-
+Bis I2 abgeschlossen ist, besitzt PatchPony keine Projekt-, Schreib-, Shell-
 oder Git-Operation für Agenten. Die aktuell angelegten Komponenten sind nur
 das lokale Build- und Betriebsfundament.

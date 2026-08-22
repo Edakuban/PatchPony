@@ -259,17 +259,17 @@ Ziel: PatchPony besitzt einen transportunabhängigen Core und kann Projekte, Job
 
 ### 8.2 Arbeitspakete
 
-- [ ] `I2.1` Aggregate und Value Objects in `PatchPony.Core` modellieren.
-- [ ] `I2.2` Job-Zustandsmaschine mit erlaubten Übergängen implementieren.
-- [ ] `I2.3` stabile Fehlercodes und Ergebnisobjekte definieren.
-- [ ] `I2.4` PostgreSQL-DbContext und erste Migration erstellen.
-- [ ] `I2.5` Repositories beziehungsweise Application Services definieren.
-- [ ] `I2.6` Idempotenzservice implementieren.
-- [ ] `I2.7` Datenbankbasierte Job-Queue für einen Worker implementieren.
-- [ ] `I2.8` Job-Claiming mit Lock und Ablaufzeit umsetzen.
-- [ ] `I2.9` Audit-Schnittstelle und append-only Audit-Ereignisse implementieren.
-- [ ] `I2.10` Correlation-ID durch Gateway, Core und Worker führen.
-- [ ] `I2.11` Retention-Schnittstellen ohne automatische Löschung vorbereiten.
+- [x] `I2.1` Aggregate und Value Objects in `PatchPony.Core` modellieren.
+- [x] `I2.2` Job-Zustandsmaschine mit erlaubten Übergängen implementieren.
+- [x] `I2.3` stabile Fehlercodes und Ergebnisobjekte definieren.
+- [x] `I2.4` PostgreSQL-DbContext und erste Migration erstellen.
+- [x] `I2.5` Repositories beziehungsweise Application Services definieren.
+- [x] `I2.6` Idempotenzservice implementieren.
+- [x] `I2.7` Datenbankbasierte Job-Queue für einen Worker implementieren.
+- [x] `I2.8` Job-Claiming mit Lock und Ablaufzeit umsetzen.
+- [x] `I2.9` Audit-Schnittstelle und append-only Audit-Ereignisse implementieren.
+- [x] `I2.10` Correlation-ID durch Gateway, Core und Worker führen.
+- [x] `I2.11` Retention-Schnittstellen ohne automatische Löschung vorbereiten.
 
 ### 8.3 Tests
 
@@ -292,27 +292,27 @@ Ziel: PatchPony besitzt einen transportunabhängigen Core und kann Projekte, Job
 
 ## 9. I3 – Projektkatalog und sichere Read-only-Runtime
 
-Status: geplant  
+Status: aktiv
 Ziel: Ein registriertes Pilotprojekt und die freigegebenen Bereiche des Wissensvaults können lokal und read-only beschrieben, durchsucht und gelesen werden.
 
 ### 9.1 Arbeitspakete
 
-- [ ] `I3.1` Format und JSON Schema für `.patchpony/project.yaml` finalisieren.
-- [ ] `I3.2` strikte Manifest-Deserialisierung und Schema-Validierung implementieren.
-- [ ] `I3.3` Projektregistrierung mit Repository-URL und Default-Branch implementieren.
-- [ ] `I3.4` kontrollierten Base-Checkout beziehungsweise Fetch implementieren.
-- [ ] `I3.5` Repository-Revisionen unveränderlich referenzieren.
-- [ ] `I3.6` kanonische Pfadauflösung implementieren.
-- [ ] `I3.7` Schutz gegen `..`, absolute Pfade, alternative Separatoren und Symlink-Ausbruch implementieren.
-- [ ] `I3.8` Readable-, Writable- und Forbidden-Pfade auswerten.
-- [ ] `I3.9` Skill-Katalog und Skill-Reader implementieren.
-- [ ] `I3.10` Projektbaum mit Depth-, Count- und Größenlimits implementieren.
-- [ ] `I3.11` Source-Suche mit festen Argumenten und Ergebnislimits implementieren.
-- [ ] `I3.12` Source-Reader mit Byte-, Zeilen- und Encoding-Limits implementieren.
-- [ ] `I3.13` CLI-Kommandos für Projektvalidierung und Read-only-Diagnose erstellen.
-- [ ] `I3.14` Git-versionierten Wissensvault als eigene, revisionsgebundene Knowledge Source registrieren.
-- [ ] `I3.15` Vault-Baum, Markdown-Reader und textuelle Suche mit Pfad-, Treffer- und Größenlimits implementieren.
-- [ ] `I3.16` Wiki-Links, Markdown-Links und Backlinks ohne Ausführung von Obsidian-Plugins auflösen.
+- [x] `I3.1` Format und JSON Schema für `.patchpony/project.yaml` finalisieren.
+- [x] `I3.2` strikte Manifest-Deserialisierung und Schema-Validierung implementieren.
+- [x] `I3.3` Projektregistrierung mit Repository-URL und Default-Branch implementieren.
+- [x] `I3.4` kontrollierten Base-Checkout beziehungsweise Fetch implementieren.
+- [x] `I3.5` Repository-Revisionen unveränderlich referenzieren.
+- [x] `I3.6` kanonische Pfadauflösung implementieren.
+- [x] `I3.7` Schutz gegen `..`, absolute Pfade, alternative Separatoren und Symlink-Ausbruch implementieren.
+- [x] `I3.8` Readable-, Writable- und Forbidden-Pfade auswerten.
+- [x] `I3.9` Skill-Katalog und Skill-Reader implementieren.
+- [x] `I3.10` Projektbaum mit Depth-, Count- und Größenlimits implementieren.
+- [x] `I3.11` Source-Suche mit festen Argumenten und Ergebnislimits implementieren.
+- [x] `I3.12` Source-Reader mit Byte-, Zeilen- und Encoding-Limits implementieren.
+- [x] `I3.13` CLI-Kommandos für Projektvalidierung und Read-only-Diagnose erstellen.
+- [x] `I3.14` Git-versionierten Wissensvault als eigene, revisionsgebundene Knowledge Source registrieren.
+- [x] `I3.15` Vault-Baum, Markdown-Reader und textuelle Suche mit Pfad-, Treffer- und Größenlimits implementieren.
+- [x] `I3.16` Wiki-Links, Markdown-Links und Backlinks ohne Ausführung von Obsidian-Plugins auflösen.
 
 ### 9.2 Interne Capabilities
 
@@ -388,13 +388,13 @@ Ziel: Die internen Read-only-Fähigkeiten stehen über wohldefinierte MCP-Tools 
 
 ### 10.1 Arbeitspakete
 
-- [ ] `I4.1` offizielles MCP C# SDK integrieren.
-- [ ] `I4.2` Streamable-HTTP-Endpunkt `/mcp` konfigurieren.
-- [ ] `I4.3` REST-Versionierung unter `/api/v1` einrichten.
-- [ ] `I4.4` MCP-Tools auf Core-Anwendungsfälle abbilden.
-- [ ] `I4.5` äquivalente REST-Endpunkte für n8n bereitstellen.
-- [ ] `I4.6` einheitliche Fehlercodes für MCP und REST abbilden.
-- [ ] `I4.7` Request-, Body-, Ergebnis- und Parallelitätslimits implementieren.
+- [x] `I4.1` offizielles MCP C# SDK integrieren.
+- [x] `I4.2` Streamable-HTTP-Endpunkt `/mcp` konfigurieren.
+- [x] `I4.3` REST-Versionierung unter `/api/v1` einrichten.
+- [x] `I4.4` MCP-Tools auf Core-Anwendungsfälle abbilden.
+- [x] `I4.5` äquivalente REST-Endpunkte für n8n bereitstellen.
+- [x] `I4.6` einheitliche Fehlercodes für MCP und REST abbilden.
+- [x] `I4.7` Request-, Body-, Ergebnis- und Parallelitätslimits implementieren.
 - [ ] `I4.8` Cancellation und Timeouts bis in Datei- und Suchoperationen weiterreichen.
 - [ ] `I4.9` Toolschemas als stabile Verträge testen.
 - [ ] `I4.10` MCP-Inspector- und Conformance-Tests einrichten.

@@ -1,1 +1,1 @@
-﻿Console.WriteLine("Hello, World!");
+return await PatchPony.Cli.CliApplication.RunAsync(args, Console.Out, Console.Error);
