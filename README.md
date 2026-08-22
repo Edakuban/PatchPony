@@ -1,6 +1,6 @@
 # PatchPony
 
-![PatchPony logo](PatchPony-logo-v3.png)
+![PatchPony logo](https://github.com/Edakuban/PatchPony/blob/main/PatchPony-logo.png)
 
 PatchPony ist eine sichere, projektbezogene Runtime fuer KI-Agenten in der
 Softwareentwicklung. Sie verbindet Tickets, freigegebenen Code,
