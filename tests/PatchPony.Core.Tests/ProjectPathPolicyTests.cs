@@ -41,12 +41,11 @@ public sealed class ProjectPathPolicyTests
     }
 
     [Fact]
-    public void Authorize_RecognizesWritableGlobsButKeepsI3CheckoutsReadOnly()
+    public void Authorize_AllowsWritesMatchingTheWritableGlobs()
     {
         var result = CreatePolicy().Authorize("docs/guide.md", ProjectPathAccess.Write);
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal("path.write_disabled", result.Error.Code);
+        Assert.True(result.IsSuccess);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using PatchPony.Core.Application;
+using PatchPony.Core.Common;
 using PatchPony.Core.Jobs;
 using PatchPony.Core.Persistence;
 using PatchPony.Core.Projects;
@@ -58,6 +59,63 @@ public sealed class ApplicationServiceTests
         Assert.Equal("job.not_found", result.Error.Code);
     }
 
+    [Fact]
+    public async Task DescribeSession_ReturnsThePersistedSessionAndUsesANotFoundError()
+    {
+        var projects = new InMemoryProjectRepository();
+        var jobs = new InMemoryJobRepository();
+        var sessions = new InMemorySessionRepository();
+        var service = new SessionApplicationService(projects, jobs, sessions);
+        var session = Session.Create(SessionId.New(), ProjectId.New(), JobId.New(), DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1)).Value!;
+        sessions.Sessions[session.Id] = session;
+
+        var found = await service.DescribeAsync(session.Id);
+        var missing = await service.DescribeAsync(SessionId.New());
+
+        Assert.True(found.IsSuccess);
+        Assert.Equal(session, found.Value);
+        Assert.False(missing.IsSuccess);
+        Assert.Equal("session.not_found", missing.Error.Code);
+    }
+    [Fact]
+    public async Task DiscardSession_ClosesOnlyAfterTheWorkspaceWasDiscarded()
+    {
+        var projects = new InMemoryProjectRepository();
+        var jobs = new InMemoryJobRepository();
+        var sessions = new InMemorySessionRepository();
+        var discarder = new RecordingDiscarder();
+        var service = new SessionApplicationService(projects, jobs, sessions, discarder);
+        var now = DateTimeOffset.UtcNow;
+        var session = Session.Create(SessionId.New(), ProjectId.New(), JobId.New(), now, now.AddHours(1)).Value!
+            .Transition(SessionStatus.Provisioning, now.AddMinutes(1)).Value!
+            .Transition(SessionStatus.Active, now.AddMinutes(2)).Value!;
+        sessions.Sessions[session.Id] = session;
+
+        var result = await service.DiscardAsync(session.Id, Path.GetTempPath(), now.AddMinutes(3));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(SessionStatus.Closed, result.Value!.Status);
+        Assert.Equal(SessionStatus.Closing, discarder.Discarded!.Status);
+        Assert.Equal(SessionStatus.Closed, sessions.Sessions[session.Id].Status);
+    }
+    [Fact]
+    public async Task DiscardSession_AllowsAFailedSessionToBeCleanedUp()
+    {
+        var projects = new InMemoryProjectRepository();
+        var jobs = new InMemoryJobRepository();
+        var sessions = new InMemorySessionRepository();
+        var service = new SessionApplicationService(projects, jobs, sessions, new RecordingDiscarder());
+        var now = DateTimeOffset.UtcNow;
+        var session = Session.Create(SessionId.New(), ProjectId.New(), JobId.New(), now, now.AddHours(1)).Value!
+            .Transition(SessionStatus.Provisioning, now.AddMinutes(1)).Value!
+            .Transition(SessionStatus.Failed, now.AddMinutes(2), "worktree.create_failed").Value!;
+        sessions.Sessions[session.Id] = session;
+
+        var result = await service.DiscardAsync(session.Id, Path.GetTempPath(), now.AddMinutes(3));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(SessionStatus.Closed, result.Value!.Status);
+    }
     private sealed class InMemoryProjectRepository : IProjectRepository
     {
         private readonly Dictionary<ProjectId, Project> projects = [];
@@ -95,11 +153,33 @@ public sealed class ApplicationServiceTests
         }
     }
 
+    private sealed class RecordingDiscarder : ISessionWorkspaceDiscarder
+    {
+        public Session? Discarded { get; private set; }
+
+        public Task<Result> DiscardAsync(Session session, string baseCheckoutRoot, CancellationToken cancellationToken = default)
+        {
+            Discarded = session;
+            return Task.FromResult(Result.Success());
+        }
+    }
     private sealed class InMemorySessionRepository : ISessionRepository
     {
-        public Task<Session?> GetAsync(SessionId id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<Session?>(null);
+        public Dictionary<SessionId, Session> Sessions { get; } = [];
 
-        public Task AddAsync(Session session, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<Session?> GetAsync(SessionId id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(Sessions.GetValueOrDefault(id));
+
+        public Task AddAsync(Session session, CancellationToken cancellationToken = default)
+        {
+            Sessions[session.Id] = session;
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAsync(Session session, CancellationToken cancellationToken = default)
+        {
+            Sessions[session.Id] = session;
+            return Task.CompletedTask;
+        }
     }
 }

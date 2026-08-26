@@ -19,11 +19,37 @@ services:
       dockerfile: src/PatchPony.Gateway/Dockerfile
     environment:
       ASPNETCORE_URLS: http://+:8080
+      # The n8n service account is fail-closed: do not start an integration without its own secret.
+      PATCHPONY_AUTH__N8N__TOKEN: ${PATCHPONY_AUTH__N8N__TOKEN:?Set PATCHPONY_AUTH__N8N__TOKEN in .env}
+      PATCHPONY_AUTH__N8N__PROJECTS: ${PATCHPONY_AUTH__N8N__PROJECTS:-patchpony,vocavid}
+      PATCHPONY_PILOTSOURCES__PROJECTS__0__ID: patchpony
+      PATCHPONY_PILOTSOURCES__PROJECTS__0__CHECKOUTROOT: /sources/patchpony
+      PATCHPONY_PILOTSOURCES__PROJECTS__0__MANIFESTFILE: /manifests/patchpony.yaml
+      PATCHPONY_PILOTSOURCES__PROJECTS__1__ID: vocavid
+      PATCHPONY_PILOTSOURCES__PROJECTS__1__CHECKOUTROOT: /sources/vocavid
+      PATCHPONY_PILOTSOURCES__PROJECTS__1__MANIFESTFILE: /manifests/vocavid.yaml
+    volumes:
+      # Only manifest-approved source roots are mounted; .env and .git never enter the Gateway container.
+      - ./src:/sources/patchpony/src:ro
+      - ./tests:/sources/patchpony/tests:ro
+      - ./docs:/sources/patchpony/docs:ro
+      - ./README.md:/sources/patchpony/README.md:ro
+      - ./pilot-sources/VocaVid/VocaVid:/sources/vocavid/VocaVid:ro
+      - ./pilot-sources/VocaVid/desktop:/sources/vocavid/desktop:ro
+      - ./pilot-sources/VocaVid/docs:/sources/vocavid/docs:ro
+      - ./pilot-sources/VocaVid/prompts:/sources/vocavid/prompts:ro
+      - ./pilot-sources/VocaVid/templates:/sources/vocavid/templates:ro
+      - ./pilot-sources/VocaVid/tests:/sources/vocavid/tests:ro
+      - ./pilot-sources/VocaVid/website:/sources/vocavid/website:ro
+      - ./pilot-sources/VocaVid/workflows:/sources/vocavid/workflows:ro
+      - ./pilot-sources/VocaVid/README.md:/sources/vocavid/README.md:ro
+      - ./pilot-sources/VocaVid/requirements.txt:/sources/vocavid/requirements.txt:ro
+      - ./integrations/pilot-projects:/manifests:ro
     depends_on:
       postgres:
         condition: service_healthy
-    ports:
-      - "${GATEWAY_PORT:-8080}:8080"
+    expose:
+      - "8080"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health/ready"]
       interval: 5s
@@ -31,10 +57,24 @@ services:
       retries: 10
       start_period: 5s
 
+  caddy:
+    image: caddy:2.11.4-alpine
+    depends_on:
+      gateway:
+        condition: service_healthy
+    ports:
+      - "${GATEWAY_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./deploy/caddy/Caddyfile.local:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
   worker:
     build:
       context: .
       dockerfile: src/PatchPony.Worker/Dockerfile
+    environment:
+      PATCHPONY_WORKER__ID: ${PATCHPONY_WORKER__ID:-patchpony-worker-local}
+      PATCHPONY_WORKER__CLAIMSIGNINGKEY: ${PATCHPONY_WORKER__CLAIMSIGNINGKEY:?Set PATCHPONY_WORKER__CLAIMSIGNINGKEY in .env}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,3 +87,5 @@ services:
 
 volumes:
   postgres-data:
+  caddy-data:
+  caddy-config:

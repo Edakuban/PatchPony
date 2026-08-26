@@ -38,6 +38,13 @@ jobs:
       - name: Test
         run: dotnet test PatchPony.slnx --configuration Release --no-build --no-restore
 
+      - name: Validate local Compose and Caddy TLS configuration
+        env:
+          POSTGRES_PASSWORD: ci-postgres-password
+          PATCHPONY_WORKER__CLAIMSIGNINGKEY: cGF0Y2hwb255LWNpLXdvcmtlci1jbGFpbS1zaWduaW5nLWtleS0zMmJ5dGVz
+        run: |
+          docker compose --env-file .env.example config --quiet
+          docker run --rm --mount type=bind,source=${{ github.workspace }}/deploy/caddy/Caddyfile.local,target=/etc/caddy/Caddyfile,readonly caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
       - name: Build gateway container
         run: docker build --file src/PatchPony.Gateway/Dockerfile --tag patchpony-gateway:ci .
 

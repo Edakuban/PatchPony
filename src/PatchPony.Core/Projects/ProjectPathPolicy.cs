@@ -55,7 +55,7 @@ public sealed class ProjectPathPolicy
             return Result.Failure(new DomainError("path.not_writable", "The requested path is not writable by the project policy."));
         }
 
-        return Result.Failure(new DomainError("path.write_disabled", "Project checkouts are read-only in this iteration."));
+        return Result.Success();
     }
 
     private static bool AreSafeGlobs(IReadOnlyList<string> patterns) => patterns.All(IsSafeGlob);

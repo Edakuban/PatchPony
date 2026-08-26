@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PatchPony.Core\PatchPony.Core.csproj" />
+    <ProjectReference Include="..\PatchPony.Infrastructure\PatchPony.Infrastructure.csproj" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
   </ItemGroup>
 </Project>

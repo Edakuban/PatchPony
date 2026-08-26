@@ -107,4 +107,22 @@ public sealed class SourceReaderTests
         Directory.CreateDirectory(root);
         return root;
     }
+
+    [Fact]
+    public async Task ReadAsync_PropagatesCallerCancellation()
+    {
+        var root = CreateTemporaryRoot();
+        try
+        {
+            WriteText(root, "src/Program.cs", "Console.WriteLine();");
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => CreateReader(root).ReadAsync("src/Program.cs", cancellation.Token));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

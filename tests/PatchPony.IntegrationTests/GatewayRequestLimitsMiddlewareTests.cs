@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using PatchPony.Core.Common;
@@ -80,6 +81,35 @@ public sealed class GatewayRequestLimitsMiddlewareTests
         Assert.Contains("request.concurrency_limited", body, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task GatewayRateLimitMiddleware_RejectsTheThirdRequestInTheSameSubjectPartition()
+    {
+        var correlations = new CorrelationContext();
+        var rateLimits = new GatewayRateLimitOptions(ApiPermitLimit: 2, McpPermitLimit: 1, WindowSeconds: 60);
+        var middleware = new GatewayRateLimitMiddleware(_ => Task.CompletedTask, new GatewayRateLimitStore(rateLimits), rateLimits);
+
+        async Task<DefaultHttpContext> InvokeAsync()
+        {
+            var context = CreateContext("/api/v1/runtime/status");
+            context.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(
+                [new System.Security.Claims.Claim("sub", "rate-limit-test")], "test"));
+            using (correlations.BeginScope(new CorrelationId("rate-limit-test")))
+            {
+                await middleware.InvokeAsync(context, correlations);
+            }
+
+            return context;
+        }
+
+        var first = await InvokeAsync();
+        var second = await InvokeAsync();
+        var rejected = await InvokeAsync();
+
+        Assert.Equal(StatusCodes.Status200OK, first.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status200OK, second.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status429TooManyRequests, rejected.Response.StatusCode);
+        Assert.Equal("60", rejected.Response.Headers.RetryAfter);
+    }
     private static DefaultHttpContext CreateContext(string path)
     {
         var context = new DefaultHttpContext();

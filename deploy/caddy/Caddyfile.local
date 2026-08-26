@@ -1,0 +1,12 @@
+https://localhost {
+	tls internal
+
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+	}
+
+	reverse_proxy gateway:8080
+}

@@ -1,0 +1,20 @@
+schemaVersion: 1
+project:
+  id: patchpony
+  displayName: PatchPony
+repository:
+  remoteUrl: https://github.com/Edakuban/PatchPony.git
+  defaultBranch: main
+paths:
+  readable:
+    - src/**
+    - tests/**
+    - docs/**
+    - README.md
+  writable: []
+  forbidden:
+    - .git/**
+    - .env
+    - .env.*
+    - '**/.env'
+    - '**/.env.*'

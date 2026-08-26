@@ -30,4 +30,12 @@ public interface ISessionRepository
     Task<Session?> GetAsync(SessionId id, CancellationToken cancellationToken = default);
 
     Task AddAsync(Session session, CancellationToken cancellationToken = default);
+
+    Task UpdateAsync(Session session, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Session>> GetDueForCleanupAsync(DateTimeOffset now, int maximumCount, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<Session>>([]);
+
+    Task<IReadOnlyList<Session>> GetForCrashRecoveryAsync(int maximumCount, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<Session>>([]);
 }

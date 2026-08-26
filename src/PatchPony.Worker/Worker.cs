@@ -2,7 +2,7 @@ using PatchPony.Core.Common;
 
 namespace PatchPony.Worker;
 
-public class Worker(ILogger<Worker> logger, ICorrelationContext correlations) : BackgroundService
+public class Worker(ILogger<Worker> logger, ICorrelationContext correlations, WorkerIdentity identity) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -13,7 +13,7 @@ public class Worker(ILogger<Worker> logger, ICorrelationContext correlations) : 
             using var logScope = logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId.Value });
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                logger.LogInformation("Worker {WorkerId} running at: {time}", identity.Id, DateTimeOffset.Now);
             }
             await Task.Delay(1000, stoppingToken);
         }

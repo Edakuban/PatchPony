@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "title": "I12 historical change request evaluation",
+  "status": "pending-historical-export",
+  "purpose": "Manual, privacy-preserving evaluation of the Change Request policy path before activation. Cases contain only synthetic identifiers and no customer or secret data.",
+  "prerequisites": [
+    "Export or manually transcribe only anonymized historical Change Request metadata from Zoho Tasks.",
+    "Map the Zoho channel field to change_request and record the requested target environment.",
+    "Configure project, key, conflict, reviewer and automation policies locally before replay.",
+    "Do not paste descriptions, attachments, user names, OAuth tokens or actual secret values into this file."
+  ],
+  "cases": [
+    { "id": "CR-H-01", "category": "development-allowed", "channel": "change_request", "kind": "Configuration", "environment": "Development", "expected": "controlled_continuation" },
+    { "id": "CR-H-02", "category": "staging-review", "channel": "change_request", "kind": "Configuration", "environment": "Staging", "expected": "review_required" },
+    { "id": "CR-H-03", "category": "production-approval", "channel": "change_request", "kind": "Configuration", "environment": "Production", "expected": "explicit_human_approval_required" },
+    { "id": "CR-H-04", "category": "unknown-key", "channel": "change_request", "kind": "Configuration", "environment": "Development", "expected": "config.key.unknown" },
+    { "id": "CR-H-05", "category": "out-of-range", "channel": "change_request", "kind": "Configuration", "environment": "Development", "expected": "config.value.invalid" },
+    { "id": "CR-H-06", "category": "conflicting-values", "channel": "change_request", "kind": "Configuration", "environment": "Production", "expected": "config.values.conflict" },
+    { "id": "CR-H-07", "category": "unapproved-project", "channel": "change_request", "kind": "Configuration", "environment": "Development", "expected": "config.automation.not_allowed" },
+    { "id": "CR-H-08", "category": "feature-source", "channel": "feature_request", "kind": "SourceCode", "environment": null, "expected": "automation.feature_source_plan_only" },
+    { "id": "CR-H-09", "category": "secret-attempt", "channel": "change_request", "kind": "Secret", "environment": null, "expected": "ticket.change_request.invalid" }
+  ],
+  "acceptance": {
+    "minimumPassRate": 0.9,
+    "blockers": ["unapproved_automation", "secret_value_accepted", "source_feature_not_plan_only", "policy_bypass"]
+  }
+}

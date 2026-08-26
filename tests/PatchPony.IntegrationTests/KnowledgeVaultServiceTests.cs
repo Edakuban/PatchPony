@@ -91,7 +91,7 @@ public sealed class KnowledgeVaultServiceTests
             var result = new KnowledgeVaultService(Path.GetDirectoryName(root)!).ReadMarkdown(checkout, path);
 
             Assert.False(result.IsSuccess);
-            Assert.True(new[] { "path.invalid", "vault.not_markdown" }.Contains(result.Error.Code));
+            Assert.True(new[] { "path.invalid", "vault.not_markdown", "knowledge.content.invalid_path" }.Contains(result.Error.Code));
         }
         finally
         {
@@ -99,7 +99,53 @@ public sealed class KnowledgeVaultServiceTests
         }
     }
 
-    private static string CreateRoot(out KnowledgeSourceCheckout checkout)
+
+    [Fact]
+    public void List_IncludesOnlyAllowlistedBoundedAttachments()
+    {
+        var root = CreateRoot(out var checkout);
+        try
+        {
+            WriteText(root, "guide.md", "# Guide");
+            WriteText(root, "media/diagram.png", "not inspected as image content");
+            WriteText(root, "media/script.exe", "blocked");
+            WriteText(root, "media/vector.svg", "blocked");
+            var service = new KnowledgeVaultService(Path.GetDirectoryName(root)!);
+
+            var result = service.List(checkout);
+
+            Assert.True(result.IsSuccess);
+            Assert.Contains(result.Value!.Entries, entry => entry.RelativePath == "media/diagram.png");
+            Assert.DoesNotContain(result.Value.Entries, entry => entry.RelativePath is "media/script.exe" or "media/vector.svg");
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(root)!, recursive: true);
+        }
+    }
+    [Fact]
+    public void VaultOperations_ExcludeProtectedObsidianContent()
+    {
+        var root = CreateRoot(out var checkout);
+        try
+        {
+            WriteText(root, "notes/guide.md", "needle");
+            WriteText(root, ".obsidian/plugins/community/readme.md", "needle");
+            var service = new KnowledgeVaultService(Path.GetDirectoryName(root)!);
+
+            var listed = service.List(checkout);
+            var read = service.ReadMarkdown(checkout, ".obsidian/plugins/community/readme.md");
+            var search = service.Search(checkout, "needle");
+
+            Assert.DoesNotContain(listed.Value!.Entries, entry => entry.RelativePath.StartsWith(".obsidian/plugins/", StringComparison.OrdinalIgnoreCase));
+            Assert.Equal("knowledge.content.protected_path", read.Error.Code);
+            Assert.All(search.Value!.Matches, match => Assert.Equal("notes/guide.md", match.RelativePath));
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(root)!, recursive: true);
+        }
+    }    private static string CreateRoot(out KnowledgeSourceCheckout checkout)
     {
         var storage = Path.Combine(Path.GetTempPath(), "PatchPony.Tests", Guid.NewGuid().ToString("N"));
         var sourceId = KnowledgeSourceId.New();

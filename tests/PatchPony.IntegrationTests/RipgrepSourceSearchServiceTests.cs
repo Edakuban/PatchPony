@@ -95,4 +95,22 @@ public sealed class RipgrepSourceSearchServiceTests
         Directory.CreateDirectory(root);
         return root;
     }
+
+    [Fact]
+    public async Task SearchAsync_PropagatesCallerCancellationBeforeCandidateTraversal()
+    {
+        var root = CreateTemporaryRoot();
+        try
+        {
+            WriteFile(root, "src/Allowed.cs", "needle");
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => CreateSearch(root).SearchAsync("needle", cancellation.Token));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

@@ -12,3 +12,8 @@ Ausgabezeile, 256 KiB Gesamtausgabe und einen Timeout von zehn Sekunden.
 
 `IsTruncated` signalisiert erreichte Datei-, Treffer- oder Ausgabegrenzen.
 Dateipfade im Ergebnis sind ausschließlich relative Projektpfade. Die Suche materialisiert keine vollständigen Quelldateien in PatchPony und führt keinen Repository-Inhalt aus.
+## Cancellation und Timeout
+
+`SearchAsync` prüft Abbruchanforderungen vor der Kandidatensuche, während der
+Verzeichnisdurchquerung und beim gestarteten `rg`-Prozess. Aufrufer-Cancellation
+wird weitergegeben; das interne Zehn-Sekunden-Limit liefert weiterhin `search.timeout`.

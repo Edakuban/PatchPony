@@ -34,12 +34,14 @@ public sealed class RipgrepSourceSearchService
 
     public async Task<Result<SourceSearchResult>> SearchAsync(string query, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(query) || query.Length > MaximumQueryCharacters)
         {
             return Result<SourceSearchResult>.Failure(new DomainError("search.invalid_query", "The search query must contain between 1 and 256 characters."));
         }
 
-        var candidates = CollectCandidates();
+        var candidates = CollectCandidates(cancellationToken);
         if (!candidates.IsSuccess)
         {
             return Result<SourceSearchResult>.Failure(candidates.Error);
@@ -96,7 +98,7 @@ public sealed class RipgrepSourceSearchService
         }
     }
 
-    private Result<CandidateFiles> CollectCandidates()
+    private Result<CandidateFiles> CollectCandidates(CancellationToken cancellationToken)
     {
         var root = resolver.Resolve(".");
         if (!root.IsSuccess || !Directory.Exists(root.Value!.FullPath))
@@ -106,18 +108,20 @@ public sealed class RipgrepSourceSearchService
 
         var files = new List<string>();
         var state = new CandidateState();
-        var collected = CollectFromDirectory(root.Value.FullPath, string.Empty, files, state);
+        var collected = CollectFromDirectory(root.Value.FullPath, string.Empty, files, state, cancellationToken);
         return collected.IsSuccess
             ? Result<CandidateFiles>.Success(new CandidateFiles(root.Value.FullPath, files, state.IsTruncated))
             : Result<CandidateFiles>.Failure(collected.Error);
     }
 
-    private Result CollectFromDirectory(string directory, string relativeDirectory, List<string> files, CandidateState state)
+    private Result CollectFromDirectory(string directory, string relativeDirectory, List<string> files, CandidateState state, CancellationToken cancellationToken)
     {
         try
         {
             foreach (var fullPath in Directory.EnumerateFileSystemEntries(directory))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 if (state.ExaminedEntries == MaximumCandidateFiles)
                 {
                     state.IsTruncated = true;
@@ -136,7 +140,7 @@ public sealed class RipgrepSourceSearchService
                         continue;
                     }
 
-                    var nested = CollectFromDirectory(authorizedDirectory.Value!.FullPath, authorizedDirectory.Value.RelativePath, files, state);
+                    var nested = CollectFromDirectory(authorizedDirectory.Value!.FullPath, authorizedDirectory.Value.RelativePath, files, state, cancellationToken);
                     if (!nested.IsSuccess || state.IsTruncated)
                     {
                         return nested;

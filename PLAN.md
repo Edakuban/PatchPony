@@ -93,7 +93,7 @@ Eine spätere Stufe wird technisch nicht aktiviert, bevor die Sicherheits- und A
 | I8 | Config-Patches und Validierung | L | I7 | geplant |
 | I9 | Gehärtete Sandbox und registrierte Tests | L | I8 | geplant |
 | I10 | Commit, Push und Merge Request | L | I9 | geplant |
-| I11 | Zoho-Bugreport-Workflow | L | I10 | geplant |
+| I11 | Zoho-Task-Workflow | L | I10 | geplant |
 | I12 | Feature- und Change-Request-Workflow | M | I11 | geplant |
 | I13 | Obsidian-Wissensvault lesen und pflegen | L | I12 | geplant |
 | I14 | Produktionshärtung und Pilotbetrieb | L | I13 | geplant |
@@ -395,10 +395,10 @@ Ziel: Die internen Read-only-Fähigkeiten stehen über wohldefinierte MCP-Tools 
 - [x] `I4.5` äquivalente REST-Endpunkte für n8n bereitstellen.
 - [x] `I4.6` einheitliche Fehlercodes für MCP und REST abbilden.
 - [x] `I4.7` Request-, Body-, Ergebnis- und Parallelitätslimits implementieren.
-- [ ] `I4.8` Cancellation und Timeouts bis in Datei- und Suchoperationen weiterreichen.
-- [ ] `I4.9` Toolschemas als stabile Verträge testen.
-- [ ] `I4.10` MCP-Inspector- und Conformance-Tests einrichten.
-- [ ] `I4.11` OpenAPI-Dokument für die REST-API erzeugen und aktuell halten.
+- [x] `I4.8` Cancellation und Timeouts bis in Datei- und Suchoperationen weiterreichen.
+- [x] `I4.9` Toolschemas als stabile Verträge testen.
+- [x] `I4.10` MCP-Inspector- und Conformance-Tests einrichten.
+- [x] `I4.11` OpenAPI-Dokument für die REST-API erzeugen und aktuell halten.
   - Swagger UI ausschließlich im lokalen Entwicklungsmodus bereitstellen.
   - In Produktion OpenAPI-JSON nur intern oder nach Authentifizierung verfügbar machen.
   - Authentifizierungsschema, Fehlerformate und repräsentative Beispielrequests dokumentieren.
@@ -447,18 +447,18 @@ Ziel: Jeder externe Aufruf ist authentifiziert, projekt- und toolbezogen autoris
 
 ### 11.1 Arbeitspakete
 
-- [ ] `I5.1` OIDC/JWT-Authentifizierung für Benutzer integrieren.
-- [ ] `I5.2` Service-Account-Authentifizierung für n8n integrieren.
-- [ ] `I5.3` Rollen und Scopes aus dem Architekturkonzept implementieren.
-- [ ] `I5.4` Autorisierung auf Projekt, Tool und Parameter anwenden.
-- [ ] `I5.5` Default-Deny-Policy durchsetzen.
-- [ ] `I5.6` Worker-Aufträge intern authentifizieren und signieren beziehungsweise eindeutig zuordnen.
-- [ ] `I5.7` Audit für Authentifizierungs-, Policy- und Toolentscheidungen ergänzen.
-- [ ] `I5.8` TLS über Reverse Proxy konfigurieren.
-- [ ] `I5.9` Rate Limits und Schutz gegen Request-Flooding ergänzen.
-- [ ] `I5.10` CORS standardmäßig deaktivieren oder eng begrenzen.
-- [ ] `I5.11` Log-Redaction für Tokens, Ticketdaten und mögliche Secrets implementieren.
-- [ ] `I5.12` negative Policy-Testmatrix erstellen.
+- [x] `I5.1` OIDC/JWT-Authentifizierung für Benutzer integrieren.
+- [x] `I5.2` Service-Account-Authentifizierung für n8n integrieren.
+- [x] `I5.3` Rollen und Scopes aus dem Architekturkonzept implementieren.
+- [x] `I5.4` Autorisierung auf Projekt, Tool und Parameter anwenden.
+- [x] `I5.5` Default-Deny-Policy durchsetzen.
+- [x] `I5.6` Worker-Aufträge intern authentifizieren und signieren beziehungsweise eindeutig zuordnen.
+- [x] `I5.7` Audit für Authentifizierungs-, Policy- und Toolentscheidungen ergänzen.
+- [x] `I5.8` TLS über Reverse Proxy konfigurieren.
+- [x] `I5.9` Rate Limits und Schutz gegen Request-Flooding ergänzen.
+- [x] `I5.10` CORS standardmäßig deaktivieren oder eng begrenzen.
+- [x] `I5.11` Log-Redaction für Tokens, Ticketdaten und mögliche Secrets implementieren.
+- [x] `I5.12` negative Policy-Testmatrix erstellen.
 
 ### 11.2 Erste Rollen
 
@@ -511,18 +511,26 @@ Ziel: Use-Case 3 und der lesende Teil von Use-Case 4 funktionieren als erster vo
 
 ### 12.1 Arbeitspakete
 
-- [ ] `I6.1` Open-WebUI-Pipe zu n8n konfigurieren beziehungsweise implementieren.
-- [ ] `I6.2` n8n-Credentials als eigenen PatchPony-Service-Account einrichten.
-- [ ] `I6.3` Read-only-Agentenworkflow in n8n erstellen.
-- [ ] `I6.4` Projektwahl und Benutzeridentität kontrolliert weiterreichen.
-- [ ] `I6.5` Antworten mit Dateipfad und relevanter Fundstelle versehen.
-- [ ] `I6.6` Toolaufrufe und Quellen für den Benutzer nachvollziehbar darstellen.
-- [ ] `I6.7` Limits für maximale Agentenschritte und Toolaufrufe setzen.
-- [ ] `I6.8` Timeout-, Abbruch- und Fehlermeldungen benutzerfreundlich gestalten.
-- [ ] `I6.9` 10 bis 20 repräsentative Entwicklerfragen als Evaluation erfassen.
-- [ ] `I6.10` Datenschutzprüfung des tatsächlich übertragenen Kontexts durchführen.
-- [ ] `I6.11` Fragen zu Modul- und Firmenwissen mit Vault-Quellen in die Evaluation aufnehmen.
+- [x] `I6.1` Open-WebUI-Pipe zu n8n konfigurieren beziehungsweise implementieren.
+- [x] `I6.2` n8n-Credentials als eigenen PatchPony-Service-Account einrichten.
+- [x] `I6.3` Read-only-Agentenworkflow in n8n erstellen.
+- [x] `I6.4` Projektwahl und Benutzeridentität kontrolliert weiterreichen.
+- [x] `I6.5` Antworten mit Dateipfad und relevanter Fundstelle versehen.
+- [x] `I6.6` Toolaufrufe und Quellen für den Benutzer nachvollziehbar darstellen.
+- [x] `I6.7` Limits für maximale Agentenschritte und Toolaufrufe setzen.
+- [x] `I6.8` Timeout-, Abbruch- und Fehlermeldungen benutzerfreundlich gestalten.
+- [x] `I6.9` 10 bis 20 repräsentative Entwicklerfragen als Evaluation erfassen.
+- [x] `I6.10` Datenschutzprüfung des tatsächlich übertragenen Kontexts durchführen.
+- [x] `I6.11` Fragen zu Modul- und Firmenwissen mit Vault-Quellen in die Evaluation aufnehmen.
 
+### 12.1a Pilotentscheidungen
+
+Die verbindlichen Annahmen für Hosting, Identitäten, Modelle, Datenhaltung und
+Sicherheitsgrenzen des ersten Piloten stehen in
+[docs/i6-pilot-decisions.md](docs/i6-pilot-decisions.md). Insbesondere läuft
+Open WebUI unter `oi.destination.one`, n8n unter `n8n.oi.destination.one`, und
+`gpt-oss:20b` ist das erste Testmodell. Die OIDC-Integration über
+`id.destination.one` bleibt für die produktive Ausbaustufe vorgesehen.
 ### 12.2 Unterstützte Interaktionen
 
 - Code und Konfiguration finden
@@ -571,17 +579,17 @@ Ziel: PatchPony kann isolierte, zeitlich begrenzte Arbeitskopien erzeugen und si
 
 ### 13.1 Arbeitspakete
 
-- [ ] `I7.1` Session-Domänenmodell und Zustandsübergänge vervollständigen.
-- [ ] `I7.2` Session-Verzeichnislayout definieren.
-- [ ] `I7.3` Git-Worktree auf serverseitig erzeugtem Branch anlegen.
-- [ ] `I7.4` Branch- und Sessionnamen ausschließlich serverseitig erzeugen.
-- [ ] `I7.5` Projekt-, Branch- und Pfad-Locks implementieren.
-- [ ] `I7.6` maximale Sessiondauer und Workspace-Größe durchsetzen.
-- [ ] `I7.7` Status und Diff einer Session bereitstellen.
-- [ ] `I7.8` explizites Verwerfen einer Session implementieren.
-- [ ] `I7.9` automatisches Cleanup abgelaufener Sessions implementieren.
-- [ ] `I7.10` Crash-Recovery für angelegte Worktrees implementieren.
-- [ ] `I7.11` Schutz gegen Symlink- und Worktree-Ausbruch erneut auf RW-Pfaden testen.
+- [x] `I7.1` Session-Domänenmodell und Zustandsübergänge vervollständigen.
+- [x] `I7.2` Session-Verzeichnislayout definieren.
+- [x] `I7.3` Git-Worktree auf serverseitig erzeugtem Branch anlegen.
+- [x] `I7.4` Branch- und Sessionnamen ausschließlich serverseitig erzeugen.
+- [x] `I7.5` Projekt-, Branch- und Pfad-Locks implementieren.
+- [x] `I7.6` maximale Sessiondauer und Workspace-Größe durchsetzen.
+- [x] `I7.7` Status und Diff einer Session bereitstellen.
+- [x] `I7.8` explizites Verwerfen einer Session implementieren.
+- [x] `I7.9` automatisches Cleanup abgelaufener Sessions implementieren.
+- [x] `I7.10` Crash-Recovery für angelegte Worktrees implementieren.
+- [x] `I7.11` Schutz gegen Symlink- und Worktree-Ausbruch erneut auf RW-Pfaden testen.
 
 ### 13.2 Fähigkeiten
 
@@ -640,17 +648,17 @@ Patches werden ohne unscharfes Matching angewendet. Weicht die Ausgangsdatei von
 
 ### 14.2 Arbeitspakete
 
-- [ ] `I8.1` Config-Adapter-Schnittstelle definieren.
-- [ ] `I8.2` JSON-Adapter mit Parser und JSON-Schema-Validierung implementieren.
-- [ ] `I8.3` YAML-Adapter mit Parser, Alias-/Anchor-Limits und Schema-Validierung implementieren.
-- [ ] `I8.4` XML-Adapter mit sicherer Parserkonfiguration und optionaler XSD-Validierung implementieren.
-- [ ] `I8.5` externe Entities und DTDs im XML-Parser deaktivieren.
-- [ ] `I8.6` Patch-Anwendung mit Pfad-, Hash- und Größenprüfung implementieren.
-- [ ] `I8.7` Write-Policy für erlaubte und verbotene Pfade durchsetzen.
-- [ ] `I8.8` Diff mit Redaction und Größenlimit erzeugen.
-- [ ] `I8.9` automatische Rücknahme bei Parser- oder Schemaverletzung implementieren.
-- [ ] `I8.10` MCP- und REST-Werkzeuge `config.patch` und `config.validate` bereitstellen.
-- [ ] `I8.11` Rolle `config-editor` projektbezogen aktivierbar machen.
+- [x] `I8.1` Config-Adapter-Schnittstelle definieren.
+- [x] `I8.2` JSON-Adapter mit Parser und JSON-Schema-Validierung implementieren.
+- [x] `I8.3` YAML-Adapter mit Parser, Alias-/Anchor-Limits und Schema-Validierung implementieren.
+- [x] `I8.4` XML-Adapter mit sicherer Parserkonfiguration und optionaler XSD-Validierung implementieren.
+- [x] `I8.5` externe Entities und DTDs im XML-Parser deaktivieren.
+- [x] `I8.6` Patch-Anwendung mit Pfad-, Hash- und Größenprüfung implementieren.
+- [x] `I8.7` Write-Policy für erlaubte und verbotene Pfade durchsetzen.
+- [x] `I8.8` Diff mit Redaction und Größenlimit erzeugen.
+- [x] `I8.9` automatische Rücknahme bei Parser- oder Schemaverletzung implementieren.
+- [x] `I8.10` MCP- und REST-Werkzeuge `config.patch` und `config.validate` bereitstellen.
+- [x] `I8.11` Rolle `config-editor` projektbezogen aktivierbar machen.
 
 ### 14.3 Grenzen für automatische Änderungen
 
@@ -700,19 +708,19 @@ Ziel: Projektdefinierte Validatoren und Tests können kontrolliert in kurzlebige
 
 ### 15.1 Arbeitspakete
 
-- [ ] `I9.1` interne Worker-API für Sandbox-Aufträge definieren.
-- [ ] `I9.2` festen Katalog erlaubter Runner-Images implementieren.
-- [ ] `I9.3` registrierte `command_id` auf serverseitige Argumentlisten abbilden.
-- [ ] `I9.4` Docker-Container mit non-root, read-only Root-FS und `cap-drop=ALL` starten.
-- [ ] `I9.5` `no-new-privileges`, seccomp und AppArmor konfigurieren.
-- [ ] `I9.6` Netzwerk standardmäßig deaktivieren.
-- [ ] `I9.7` CPU-, RAM-, PID-, Disk- und Zeitlimits durchsetzen.
-- [ ] `I9.8` nur den Session-Worktree beschreibbar mounten.
-- [ ] `I9.9` stdout/stderr mit Byte- und Zeitlimits erfassen.
-- [ ] `I9.10` Testresultate und Artefaktmetadaten speichern.
-- [ ] `I9.11` Cancellation und hartes Cleanup implementieren.
-- [ ] `I9.12` Rootless-Docker-Tauglichkeit für die benötigten Runner prüfen.
-- [ ] `I9.13` MCP-/REST-Fähigkeiten `tests.list`, `tests.run` und `tests.result` bereitstellen.
+- [x] `I9.1` interne Worker-API für Sandbox-Aufträge definieren.
+- [x] `I9.2` festen Katalog erlaubter Runner-Images implementieren.
+- [x] `I9.3` registrierte `command_id` auf serverseitige Argumentlisten abbilden.
+- [x] `I9.4` Docker-Container mit non-root, read-only Root-FS und `cap-drop=ALL` starten.
+- [x] `I9.5` `no-new-privileges`, seccomp und AppArmor konfigurieren.
+- [x] `I9.6` Netzwerk standardmäßig deaktivieren.
+- [x] `I9.7` CPU-, RAM-, PID-, Disk- und Zeitlimits durchsetzen.
+- [x] `I9.8` nur den Session-Worktree beschreibbar mounten.
+- [x] `I9.9` stdout/stderr mit Byte- und Zeitlimits erfassen.
+- [x] `I9.10` Testresultate und Artefaktmetadaten speichern.
+- [x] `I9.11` Cancellation und hartes Cleanup implementieren.
+- [x] `I9.12` Rootless-Docker-Tauglichkeit für die benötigten Runner prüfen.
+- [x] `I9.13` MCP-/REST-Fähigkeiten `tests.list`, `tests.run` und `tests.result` bereitstellen.
 
 ### 15.2 Keine freie Shell
 
@@ -771,18 +779,18 @@ Ziel: Erfolgreich validierte Änderungen können kontrolliert über einen Git-Bo
 
 ### 16.1 Arbeitspakete
 
-- [ ] `I10.1` Provider-Abstraktion für GitHub oder GitLab definieren.
-- [ ] `I10.2` ausschließlich den in I0 gewählten Provider implementieren.
-- [ ] `I10.3` Bot-/Service-Account mit minimalen Repository-Rechten konfigurieren.
-- [ ] `I10.4` serverseitige Branch-Namens- und Commit-Message-Vorlagen implementieren.
-- [ ] `I10.5` `git.status`, `git.create_branch` und `git.commit` implementieren.
-- [ ] `I10.6` kontrollierten Push nur auf Bot-Branches implementieren.
-- [ ] `I10.7` Merge-Request-Erstellung über Provider-API implementieren.
-- [ ] `I10.8` Beschreibung mit Ticket, Plan, Diff-Zusammenfassung, Tests und Risiken erzeugen.
-- [ ] `I10.9` Reviewer-Zuordnung aus Projektpolicy implementieren.
-- [ ] `I10.10` menschliche Freigabe vor Push oder MR projektbezogen unterstützen.
-- [ ] `I10.11` Idempotenz und Retry für Commit, Push und MR sicherstellen.
-- [ ] `I10.12` Credential-Rotation und Redaction testen.
+- [x] `I10.1` Provider-Abstraktion für GitHub oder GitLab definieren.
+- [x] `I10.2` ausschließlich den in I0 gewählten Provider implementieren.
+- [x] `I10.3` Bot-/Service-Account mit minimalen Repository-Rechten konfigurieren.
+- [x] `I10.4` serverseitige Branch-Namens- und Commit-Message-Vorlagen implementieren.
+- [x] `I10.5` `git.status`, `git.create_branch` und `git.commit` implementieren.
+- [x] `I10.6` kontrollierten Push nur auf Bot-Branches implementieren.
+- [x] `I10.7` Merge-Request-Erstellung über Provider-API implementieren.
+- [x] `I10.8` Beschreibung mit Ticket, Plan, Diff-Zusammenfassung, Tests und Risiken erzeugen.
+- [x] `I10.9` Reviewer-Zuordnung aus Projektpolicy implementieren.
+- [x] `I10.10` menschliche Freigabe vor Push oder MR projektbezogen unterstützen.
+- [x] `I10.11` Idempotenz und Retry für Commit, Push und MR sicherstellen.
+- [x] `I10.12` Credential-Rotation und Redaction testen.
 
 ### 16.2 Unverhandelbare Git-Regeln in V1
 
@@ -824,27 +832,27 @@ Remote-Schreibrechte dürfen erst aktiviert werden, wenn:
 
 ---
 
-## 17. I11 – Zoho-Bugreport-Workflow
+## 17. I11 – Zoho-Task-Workflow
 
 Status: geplant  
 Ziel: Use-Case 1 funktioniert vom Zoho-Webhook bis zum Kommentar, Plan oder Merge Request.
 
 ### 17.1 Arbeitspakete
 
-- [ ] `I11.1` Zoho-Webhook authentifizieren und Payload strikt validieren.
-- [ ] `I11.2` Idempotenzschlüssel aus Ticket, Revision und Eventtyp bilden.
-- [ ] `I11.3` Ticketdaten in ein internes neutrales Schema normalisieren.
-- [ ] `I11.4` Projektzuordnung konfigurieren.
-- [ ] `I11.5` Anhänge mit Größen-, Typ- und Archivlimits behandeln.
-- [ ] `I11.6` projektspezifische Vollständigkeitskriterien definieren.
-- [ ] `I11.7` Triage-Ausgabe als strukturiertes Schema implementieren.
-- [ ] `I11.8` gezielte Rückfrage bei fehlenden Informationen erzeugen.
-- [ ] `I11.9` Plan aus Skills, Source, Config und freigegebenem Vault-Wissen als strukturiertes Ergebnis erzeugen.
-- [ ] `I11.10` `plan.md` als lesbare Darstellung rendern.
-- [ ] `I11.11` Automatisierungsentscheidung ausschließlich anhand harter Policy treffen.
-- [ ] `I11.12` zulässige Config-Fixes durch Session, Validierung, Tests und MR führen.
-- [ ] `I11.13` Ergebnis und Links im Zoho-Ticket kommentieren.
-- [ ] `I11.14` Fehler- und Eskalationspfade implementieren.
+- [x] `I11.1` Zoho-Webhook authentifizieren und Payload strikt validieren.
+- [x] `I11.2` Idempotenzschlüssel aus Ticket, Revision und Eventtyp bilden.
+- [x] `I11.3` Ticketdaten in ein internes neutrales Schema normalisieren.
+- [x] `I11.4` Projektzuordnung konfigurieren.
+- [x] `I11.5` Anhänge mit Größen-, Typ- und Archivlimits behandeln.
+- [x] `I11.6` projektspezifische Vollständigkeitskriterien definieren.
+- [x] `I11.7` Triage-Ausgabe als strukturiertes Schema implementieren.
+- [x] `I11.8` gezielte Rückfrage bei fehlenden Informationen erzeugen.
+- [x] `I11.9` Plan aus Skills, Source, Config und freigegebenem Vault-Wissen als strukturiertes Ergebnis erzeugen.
+- [x] `I11.10` `plan.md` als lesbare Darstellung rendern.
+- [x] `I11.11` Automatisierungsentscheidung ausschließlich anhand harter Policy treffen.
+- [x] `I11.12` zulässige Config-Fixes durch Session, Validierung, Tests und MR führen.
+- [x] `I11.13` Ergebnis und Links im Zoho-Task kommentieren.
+- [x] `I11.14` Fehler- und Eskalationspfade implementieren.
 
 ### 17.2 Workflow-Ausgänge
 
@@ -897,15 +905,15 @@ Ziel: Use-Case 2 verwendet dieselbe sichere Pipeline mit eigenen fachlichen Rege
 
 ### 18.1 Arbeitspakete
 
-- [ ] `I12.1` Tickettypen und gewünschte Änderung strukturiert erfassen.
-- [ ] `I12.2` Regeln für Development-, Staging- und Production-Konfiguration definieren.
-- [ ] `I12.3` bekannte Config-Schlüssel, Typen und Wertebereiche prüfen.
-- [ ] `I12.4` Widersprüche zwischen Einstellungen erkennen.
-- [ ] `I12.5` Reviewer und Freigaben je Umgebung zuordnen.
-- [ ] `I12.6` Config-only-Automatisierung auf freigegebene Projekte begrenzen.
-- [ ] `I12.7` Feature-Requests mit Source-Änderungen auf `plan_only` beschränken.
-- [ ] `I12.8` n8n-Workflow und Zoho-Kommentare für Change-Requests ergänzen.
-- [ ] `I12.9` historische Change-Requests evaluieren.
+- [x] `I12.1` Tickettypen und gewünschte Änderung strukturiert erfassen.
+- [x] `I12.2` Regeln für Development-, Staging- und Production-Konfiguration definieren.
+- [x] `I12.3` bekannte Config-Schlüssel, Typen und Wertebereiche prüfen.
+- [x] `I12.4` Widersprüche zwischen Einstellungen erkennen.
+- [x] `I12.5` Reviewer und Freigaben je Umgebung zuordnen.
+- [x] `I12.6` Config-only-Automatisierung auf freigegebene Projekte begrenzen.
+- [x] `I12.7` Feature-Requests mit Source-Änderungen auf `plan_only` beschränken.
+- [x] `I12.8` n8n-Workflow und Zoho-Kommentare für Change-Requests ergänzen.
+- [ ] `I12.9` **← Durchführung offen** historische Change-Requests evaluieren (anonymisierten Export bereitstellen).
 
 ### 18.2 Policy-Matrix
 
@@ -943,13 +951,13 @@ Ziel: Use-Case 4 funktioniert vom Auffinden firmenweiten Wissens bis zu einer ko
 
 ### 19.1 Arbeitspakete
 
-- [ ] `I13.1` Knowledge-Source-Modell für einen separaten Git-Vault und projektbezogene Pfadfreigaben finalisieren.
-- [ ] `I13.2` `knowledge.tree`, `knowledge.search`, `knowledge.read` und `knowledge.links` als stabile MCP- und REST-Verträge härten.
-- [ ] `I13.3` Markdown- und Wiki-Link-Parser mit kanonischer Pfadauflösung implementieren.
-- [ ] `I13.4` YAML-Frontmatter mit Alias-, Tiefen- und Größenlimits sowie optionalem Schema validieren.
-- [ ] `I13.5` Attachment-Allowlist und Größenlimits implementieren.
-- [ ] `I13.6` `.obsidian/plugins/**`, `.obsidian/snippets/**`, Skripte und ausführbare Inhalte technisch sperren.
-- [ ] `I13.7` `knowledge.patch` als semantisches Werkzeug für freigegebene Markdown- und Frontmatter-Änderungen implementieren.
+- [x] `I13.1` Knowledge-Source-Modell für einen separaten Git-Vault und projektbezogene Pfadfreigaben finalisieren.
+- [x] `I13.2` `knowledge.tree`, `knowledge.search`, `knowledge.read` und `knowledge.links` als stabile MCP- und REST-Verträge gehärtet (ohne Vault-Inhalte; default-deny).
+- [x] `I13.3` Markdown- und Wiki-Link-Parser mit kanonischer Pfadauflösung implementiert (kein Dateisystemzugriff, Traversal- und Plattformpfade abgewiesen).
+- [x] `I13.4` YAML-Frontmatter mit Alias-, Tiefen- und Größenlimits sowie optionalem serverseitigem Schema validiert.
+- [x] `I13.5` Attachment-Allowlist und Einzel-, Gesamt- sowie Anzahlgrenzen implementiert (default-deny).
+- [x] `I13.6` `.obsidian/plugins/**`, `.obsidian/snippets/**`, Skripte und ausführbare Inhalte zentral technisch gesperrt.
+- [ ] `I13.7` **← nächster Schritt** `knowledge.patch` als semantisches Werkzeug für freigegebene Markdown- und Frontmatter-Änderungen implementieren.
 - [ ] `I13.8` Link- und Backlink-Auswirkungsanalyse für Umbenennungen und Änderungen implementieren.
 - [ ] `I13.9` Knowledge-Owner- und Reviewer-Zuordnung pro Vault-Bereich konfigurieren.
 - [ ] `I13.10` Vault-Änderungen über Session, Bot-Branch, Diff, Commit, Push und Merge Request führen.

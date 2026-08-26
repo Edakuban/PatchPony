@@ -1,0 +1,222 @@
+{
+  "name": "PatchPony · Read-only Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "patchpony/read-only",
+        "responseMode": "responseNode",
+        "options": {},
+        "authentication": "headerAuth"
+      },
+      "id": "b6e04eb3-30f7-458f-bfb6-61603adf88c1",
+      "name": "Open WebUI webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        0
+      ],
+      "webhookId": "patchpony-read-only-pilot",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Open WebUI PatchPony Webhook (X-PatchPony-Webhook-Token)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const envelope = $input.first().json;\nconst input = envelope.body ?? envelope;\nconst question = typeof input.question === 'string' ? input.question.trim() : '';\nconst requestId = typeof input.requestId === 'string' ? input.requestId : '';\nconst projectId = typeof input.projectId === 'string' ? input.projectId : '';\nconst requester = input.requester;\nconst validProject = /^[a-z0-9][a-z0-9-]{0,63}$/.test(projectId);\nconst validRequester = requester && requester.source === 'open-webui' && typeof requester.subject === 'string' && /^owui-sha256:[0-9a-f]{64}$/.test(requester.subject);\nconst validRequestId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId);\nif (input.source !== 'open-webui' || !validRequestId || !validProject || !validRequester || question.length === 0 || question.length > 12000) {\n  throw new Error('Invalid PatchPony read-only request.');\n}\nreturn [{ json: { requestId, projectId, requester, question } }];"
+      },
+      "id": "d325089f-7777-4aef-8ef1-16df05ad497e",
+      "name": "Validate minimal request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.question }}",
+        "options": {
+          "systemMessage": "Du bist der read-only PatchPony-Assistent. Beantworte ausschließlich Fragen zu freigegebenem Code und Wissen. Nutze nur bereitgestellte PatchPony-MCP-Tools. Führe niemals Schreiboperationen, Shell-Befehle, Git-Operationen, Netzwerkaufrufe oder Änderungen aus. Wenn die verfügbaren Quellen nicht reichen, sage das klar. Erfinde keine Dateien, Ergebnisse oder Berechtigungen. Wenn du Source-Ergebnisse verwendest, belege jede konkrete Aussage unmittelbar im Format [projekt:pfad:Lzeile] anhand der vom Tool gelieferten citation-Werte. Erfinde niemals Zitate. Antworte auf Deutsch und knapp.",
+          "returnIntermediateSteps": true,
+          "maxIterations": 6
+        }
+      },
+      "id": "697fcf55-306c-4a66-a6a2-87edaa37fd27",
+      "name": "Read-only PatchPony Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:20b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "99f64164-67f2-42c6-a980-7ed753291ca3",
+      "name": "destination.one gpt-oss:20b",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -220,
+        220
+      ],
+      "credentials": {
+        "openAiApi": {
+          "name": "destination.one OpenAI-compatible"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "={{ $env.PATCHPONY_GATEWAY_URL + '/mcp' }}",
+        "serverTransport": "httpStreamable",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": [
+          "runtime.status",
+          "runtime.validate_correlation",
+          "source.search",
+          "source.read"
+        ],
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "b411179a-0459-4ff9-bb79-7d779c3fc75a",
+      "name": "PatchPony read-only MCP",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        20,
+        220
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "PatchPony Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const errorMessage = typeof $json.error?.message === 'string' ? $json.error.message : '';\nfunction safeFailure(message) {\n  const normalized = message.toLowerCase();\n  if (normalized.includes('max iterations')) return 'PatchPony hat das Recherchelimit erreicht. Bitte grenze die Frage weiter ein und versuche es erneut.';\n  if (normalized.includes('timeout') || normalized.includes('timed out')) return 'PatchPony hat nicht rechtzeitig geantwortet. Bitte versuche es erneut.';\n  if (normalized.includes('abort') || normalized.includes('cancel')) return 'Die PatchPony-Anfrage wurde abgebrochen. Bitte stelle die Frage erneut, wenn du fortfahren möchtest.';\n  if (normalized.includes('rate limit') || normalized.includes('429')) return 'PatchPony ist gerade ausgelastet. Bitte warte kurz und versuche es erneut.';\n  return 'PatchPony konnte diese Anfrage derzeit nicht verarbeiten. Bitte versuche es später erneut.';\n}\nif (errorMessage) return [{ json: { answer: safeFailure(errorMessage), sources: [], toolCalls: [] } }];\nconst answer = typeof $json.output === 'string' && $json.output.trim() ? $json.output.trim() : 'PatchPony konnte keine Antwort erzeugen.';\nconst allowedTools = new Set(['runtime.status', 'runtime.validate_correlation', 'source.search', 'source.read']);\nconst toolCalls = [];\nconst sources = [];\nconst seenTools = new Set();\nconst seenSources = new Set();\nconst safeProject = /^[a-z0-9][a-z0-9-]{0,63}$/;\nconst safePath = /^[A-Za-z0-9._/@+:-]+(?:\\/[A-Za-z0-9._/@+:-]+)*$/;\n\nfunction addTool(value) {\n  if (toolCalls.length < 6 && typeof value === 'string' && allowedTools.has(value) && !seenTools.has(value)) {\n    seenTools.add(value);\n    toolCalls.push(value);\n  }\n}\nfunction addCitation(value) {\n  if (!value || typeof value !== 'object') return;\n  const projectId = value.projectId ?? value.ProjectId;\n  const path = value.path ?? value.Path;\n  const startLine = value.startLine ?? value.StartLine;\n  const endLine = value.endLine ?? value.EndLine;\n  if (typeof projectId !== 'string' || !safeProject.test(projectId) || typeof path !== 'string' || !safePath.test(path) || !Number.isInteger(startLine) || !Number.isInteger(endLine) || startLine < 1 || endLine < startLine) return;\n  const key = `${projectId}:${path}:${startLine}:${endLine}`;\n  if (!seenSources.has(key) && sources.length < 20) {\n    seenSources.add(key);\n    sources.push({ projectId, path, startLine, endLine });\n  }\n}\nfunction inspect(value, depth = 0) {\n  if (depth > 12 || value === null || value === undefined) return;\n  if (typeof value === 'string') {\n    addTool(value);\n    const trimmed = value.trim();\n    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {\n      try { inspect(JSON.parse(trimmed), depth + 1); } catch (_) { /* Tool text need not be JSON. */ }\n    }\n    return;\n  }\n  if (Array.isArray(value)) {\n    for (const item of value) inspect(item, depth + 1);\n    return;\n  }\n  if (typeof value === 'object') {\n    addTool(value.tool ?? value.toolName ?? value.name);\n    addCitation(value.citation ?? value.Citation);\n    for (const nested of Object.values(value)) inspect(nested, depth + 1);\n  }\n}\ninspect($json.intermediateSteps);\nreturn [{ json: { answer, sources, toolCalls } }];"
+      },
+      "id": "84ad492f-61c5-4e4d-bd09-fcccf8286668",
+      "name": "Format safe response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { answer: $json.answer, sources: $json.sources, toolCalls: $json.toolCalls } }}",
+        "options": {}
+      },
+      "id": "0d0ff9dc-bd1e-4485-8a21-e318dd5fc1a4",
+      "name": "Respond to Open WebUI",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        300,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Open WebUI webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate minimal request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate minimal request": {
+      "main": [
+        [
+          {
+            "node": "Read-only PatchPony Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read-only PatchPony Agent": {
+      "main": [
+        [
+          {
+            "node": "Format safe response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "destination.one gpt-oss:20b": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Read-only PatchPony Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PatchPony read-only MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Read-only PatchPony Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format safe response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Open WebUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false,
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none"
+  },
+  "versionId": "a29d521f-22d9-4fa7-b03e-09464364894c",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

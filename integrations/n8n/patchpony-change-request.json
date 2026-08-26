@@ -1,0 +1,36 @@
+{
+  "name": "PatchPony · Change Request Intake",
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "patchpony-change-request", "responseMode": "responseNode", "authentication": "headerAuth" },
+      "id": "change-request-webhook",
+      "name": "Change request webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": { "jsCode": "const body = $json.body ?? {};\nconst task = body.task ?? {};\nconst channels = new Set(['change_request']);\nconst environments = new Set(['Development', 'Staging', 'Production']);\nconst kinds = new Set(['Configuration']);\nconst validId = value => typeof value === 'string' && /^[A-Za-z0-9._-]{1,128}$/.test(value);\nconst targets = Array.isArray(body.targets) ? body.targets : [];\nif (!channels.has(task.channel) || !validId(task.id) || !validId(task.revision) || !validId(task.projectId) || !environments.has(body.environment) || !kinds.has(body.kind) || targets.length < 1 || targets.length > 16) { throw new Error('invalid change request'); }\nfor (const target of targets) { if (!target || typeof target.reference !== 'string' || target.reference.length > 200 || target.reference.startsWith('/') || target.reference.includes('\\\\') || target.reference.includes('..') || typeof target.requestedValue !== 'string' || target.requestedValue.length > 512) throw new Error('invalid change target'); }\nreturn [{ json: { task: { id: task.id, revision: task.revision, projectId: task.projectId, channel: task.channel }, environment: body.environment, kind: body.kind, targets } }];" },
+      "id": "validate-change-request",
+      "name": "Validate change request envelope",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ { accepted: true, status: 'queued_for_patchpony_policy_handoff' } }}" },
+      "id": "respond-change-request",
+      "name": "Respond to change request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [480, 0]
+    }
+  ],
+  "connections": {
+    "Change request webhook": { "main": [[{ "node": "Validate change request envelope", "type": "main", "index": 0 }]] },
+    "Validate change request envelope": { "main": [[{ "node": "Respond to change request", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {}
+}

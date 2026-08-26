@@ -27,6 +27,8 @@ public sealed class KnowledgeVaultService
     private const int MaximumResults = 100;
     private const int MaximumMatchesPerFile = 20;
     private static readonly UTF8Encoding Utf8WithoutReplacement = new(false, true);
+    private static readonly KnowledgeAttachmentPolicy AttachmentPolicy = new();
+    private static readonly KnowledgeVaultContentPolicy ContentPolicy = new();
 
     private readonly string storageRoot;
 
@@ -67,6 +69,12 @@ public sealed class KnowledgeVaultService
         if (!IsMarkdown(relativePath))
         {
             return Result<KnowledgeVaultReadResult>.Failure(new DomainError("vault.not_markdown", "Only Markdown files can be read from the knowledge vault."));
+        }
+
+        var contentAccess = ContentPolicy.ValidateReadablePath(relativePath);
+        if (!contentAccess.IsSuccess)
+        {
+            return Result<KnowledgeVaultReadResult>.Failure(contentAccess.Error);
         }
 
         var resolved = context.Value!.Resolver.Resolve(relativePath);
@@ -215,6 +223,11 @@ public sealed class KnowledgeVaultService
                     continue;
                 }
 
+                if (!ContentPolicy.ValidateReadablePath(resolved.Value!.RelativePath).IsSuccess)
+                {
+                    continue;
+                }
+
                 if (Directory.Exists(fullPath))
                 {
                     entries.Add(new KnowledgeVaultTreeEntry(resolved.Value!.RelativePath, KnowledgeVaultTreeEntryKind.Directory, null));
@@ -235,12 +248,36 @@ public sealed class KnowledgeVaultService
                 if (File.Exists(fullPath))
                 {
                     var size = new FileInfo(fullPath).Length;
-                    if (size > MaximumTreeFileBytes)
+                    var relativeFile = resolved.Value!.RelativePath;
+                    if (!ContentPolicy.ValidateReadablePath(relativeFile).IsSuccess)
                     {
-                        state.HasOversizedEntries = true;
                         continue;
                     }
-                    entries.Add(new KnowledgeVaultTreeEntry(resolved.Value!.RelativePath, KnowledgeVaultTreeEntryKind.File, size));
+                    if (IsMarkdown(relativeFile))
+                    {
+                        if (size > MaximumTreeFileBytes)
+                        {
+                            state.HasOversizedEntries = true;
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        var attachment = AttachmentPolicy.Validate(new KnowledgeAttachmentMetadata(relativeFile, size));
+                        if (!attachment.IsSuccess)
+                        {
+                            state.HasOversizedEntries |= attachment.Error.Code == "knowledge.attachment.too_large";
+                            continue;
+                        }
+                        if (state.AttachmentCount >= KnowledgeAttachmentPolicy.MaximumAttachmentCount || size > KnowledgeAttachmentPolicy.MaximumTotalBytes - state.AttachmentBytes)
+                        {
+                            state.IsTruncated = true;
+                            continue;
+                        }
+                        state.AttachmentCount++;
+                        state.AttachmentBytes += size;
+                    }
+                    entries.Add(new KnowledgeVaultTreeEntry(relativeFile, KnowledgeVaultTreeEntryKind.File, size));
                 }
             }
 
@@ -288,7 +325,7 @@ public sealed class KnowledgeVaultService
                         return nested;
                     }
                 }
-                else if (File.Exists(fullPath) && IsMarkdown(resolved.Value!.RelativePath))
+                else if (File.Exists(fullPath) && IsMarkdown(resolved.Value!.RelativePath) && ContentPolicy.ValidateReadablePath(resolved.Value.RelativePath).IsSuccess)
                 {
                     if (new FileInfo(fullPath).Length > MaximumReadFileBytes)
                     {
@@ -315,6 +352,6 @@ public sealed class KnowledgeVaultService
     private static bool IsMarkdown(string path) => path.EndsWith(".md", StringComparison.OrdinalIgnoreCase) && !path.EndsWith("/", StringComparison.Ordinal);
     private static bool IsReparsePoint(string path) => (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
     private sealed record VaultContext(string Root, ProjectPathResolver Resolver);
-    private sealed class TreeState { public int ExaminedEntries { get; set; } public bool IsTruncated { get; set; } public bool HasOversizedEntries { get; set; } }
+    private sealed class TreeState { public int ExaminedEntries { get; set; } public int AttachmentCount { get; set; } public long AttachmentBytes { get; set; } public bool IsTruncated { get; set; } public bool HasOversizedEntries { get; set; } }
     private sealed class CandidateState { public int ExaminedEntries { get; set; } public bool IsTruncated { get; set; } }
 }

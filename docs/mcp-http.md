@@ -7,3 +7,5 @@ Clients müssen einen Streamable-HTTP-kompatiblen `Accept`-Header senden, etwa `
 Der Endpunkt enthält in diesem Schritt noch keine fachlichen Tools. Tool-Verträge und -Zuordnung folgen separat mit I4.4; Request- und Parallelitätslimits werden in I4.7 ergänzt.
 
 Grundlage: [offizielle C#-SDK-Transportdokumentation](https://github.com/modelcontextprotocol/csharp-sdk/blob/main/docs/concepts/transports/transports.md).
+
+Lokale Inspector- und automatisierte Conformance-Prüfungen sind in [mcp-inspector.md](mcp-inspector.md) beschrieben.

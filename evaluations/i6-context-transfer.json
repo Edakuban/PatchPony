@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "scope": "I6 read-only pilot only",
+  "technicalReviewStatus": "completed-formal-approval-pending",
+  "transfers": [
+    {
+      "from": "Open WebUI",
+      "to": "n8n",
+      "purpose": "Start a read-only research request",
+      "data": ["requestId", "source=open-webui", "admin-selected projectId", "pseudonymous requester subject", "last user question"],
+      "excluded": ["full chat history", "raw Open WebUI user attributes", "model-provider API key", "PatchPony service token"],
+      "transport": "trusted HTTPS webhook with a separate header secret"
+    },
+    {
+      "from": "n8n",
+      "to": "PatchPony Gateway",
+      "purpose": "Use manifest-bound read-only MCP tools",
+      "data": ["projectId", "literal search query or safe relative path", "n8n service-account header"],
+      "excluded": ["end-user raw identity", "Open WebUI webhook token", "model-provider API key"],
+      "transport": "authenticated Streamable HTTP MCP"
+    },
+    {
+      "from": "PatchPony Gateway",
+      "to": "n8n",
+      "purpose": "Return approved source context",
+      "data": ["manifest-approved UTF-8 source excerpts", "relative paths", "line citations", "truncation state"],
+      "excluded": [".env", ".git", "forbidden paths", "database files", "host paths"],
+      "transport": "authenticated Streamable HTTP MCP response"
+    },
+    {
+      "from": "n8n",
+      "to": "destination.one model provider",
+      "purpose": "Generate a read-only answer",
+      "data": ["last user question", "fixed read-only system prompt", "approved tool result context"],
+      "excluded": ["raw Open WebUI identity", "service tokens", "full chat history"],
+      "transport": "configured OpenAI-compatible provider credential"
+    },
+    {
+      "from": "n8n",
+      "to": "Open WebUI",
+      "purpose": "Show the answer",
+      "data": ["answer", "verified source citations", "allowlisted tool names"],
+      "excluded": ["tool parameters", "raw tool results", "intermediate steps", "errors", "credentials"],
+      "transport": "synchronous HTTPS webhook response"
+    }
+  ],
+  "storage": [
+    {
+      "system": "n8n workflow execution data",
+      "configuredState": "success and error execution persistence disabled in the pilot workflow",
+      "verificationNeeded": "instance-level execution retention, backups and external logging"
+    },
+    {
+      "system": "PatchPony Gateway audit",
+      "configuredState": "correlation ID, policy decision, project and tool name; no tool parameter values",
+      "verificationNeeded": "database backup and retention configuration"
+    },
+    {
+      "system": "Open WebUI",
+      "configuredState": "not configured by this repository",
+      "verificationNeeded": "chat history, logs, backups, access controls and deletion handling"
+    },
+    {
+      "system": "destination.one",
+      "configuredState": "model endpoint configured outside this repository",
+      "verificationNeeded": "processing terms, model data use, location, sub-processors, logging and retention"
+    }
+  ],
+  "releaseConditions": [
+    "Data owner confirms that the selected pilot repository content may be sent to destination.one.",
+    "Responsible privacy and security owners confirm the processor relationship, location and retention for Open WebUI, n8n and destination.one.",
+    "Open WebUI and n8n production logging, backups and deletion handling are documented.",
+    "Keycloak/OIDC rollout replaces the temporary Open WebUI pseudonym before wider use."
+  ]
+}

@@ -32,7 +32,7 @@ public static class GatewayErrorAdapter
 
     private static int ToHttpStatusCode(string code) =>
         code == "request.target_too_large" ? StatusCodes.Status414UriTooLong :
-        code == "request.concurrency_limited" ? StatusCodes.Status429TooManyRequests :
+        code is "request.concurrency_limited" or "request.rate_limited" ? StatusCodes.Status429TooManyRequests :
         code.EndsWith(".not_found", StringComparison.Ordinal) ? StatusCodes.Status404NotFound :
         code.Contains("forbidden", StringComparison.Ordinal) ? StatusCodes.Status403Forbidden :
         code.Contains("already_", StringComparison.Ordinal) || code.Contains("conflict", StringComparison.Ordinal) || code.Contains("transition", StringComparison.Ordinal) ? StatusCodes.Status409Conflict :

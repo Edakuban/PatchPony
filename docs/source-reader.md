@@ -11,3 +11,9 @@ Source-Reads unkontrolliert Kontext oder Binärdaten ausgeben.
 
 Der Reader führt keinen Dateiinhalt aus und akzeptiert weder absolute Pfade
 noch Pfadtraversierung oder Pfade außerhalb der Read-Policy.
+## Cancellation und Timeout
+
+`ReadAsync` nimmt ein `CancellationToken` entgegen und verwendet zusätzlich ein
+internes Zeitlimit von fünf Sekunden. Eine vom Aufrufer ausgelöste Abbruchanforderung
+wird als `OperationCanceledException` weitergegeben; ein internes Zeitlimit ergibt
+den fachlichen Fehler `source.timeout`.

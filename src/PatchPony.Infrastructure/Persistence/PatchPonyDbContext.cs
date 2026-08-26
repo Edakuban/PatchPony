@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PatchPony.Core.Jobs;
+using PatchPony.Core.Sessions;
 
 namespace PatchPony.Infrastructure.Persistence;
 
@@ -153,7 +154,7 @@ public sealed class KnowledgeSourceRow { public Guid Id { get; init; } public Gu
 public sealed class JobRow { public Guid Id { get; init; } public Guid ProjectId { get; init; } public string Kind { get; init; } = string.Empty; public JobStatus Status { get; init; } public DateTimeOffset CreatedAt { get; init; } }
 public sealed class JobStatusChangeRow { public Guid Id { get; init; } public Guid JobId { get; init; } public JobStatus From { get; init; } public JobStatus To { get; init; } public DateTimeOffset OccurredAt { get; init; } }
 public sealed class JobQueueItemRow { public Guid JobId { get; init; } public DateTimeOffset EnqueuedAt { get; init; } public DateTimeOffset AvailableAt { get; init; } public Guid? ClaimId { get; set; } public string? ClaimedBy { get; set; } public DateTimeOffset? ClaimExpiresAt { get; set; } }
-public sealed class SessionRow { public Guid Id { get; init; } public Guid ProjectId { get; init; } public Guid JobId { get; init; } public DateTimeOffset CreatedAt { get; init; } public DateTimeOffset ExpiresAt { get; init; } }
+public sealed class SessionRow { public Guid Id { get; init; } public Guid ProjectId { get; init; } public Guid JobId { get; init; } public DateTimeOffset CreatedAt { get; init; } public DateTimeOffset ExpiresAt { get; init; } public SessionStatus Status { get; init; } public DateTimeOffset StatusChangedAt { get; init; } public string? FailureCode { get; init; } }
 public sealed class ApprovalRow { public Guid Id { get; init; } public Guid JobId { get; init; } public string Decision { get; init; } = string.Empty; public string RequestedBy { get; init; } = string.Empty; public DateTimeOffset RequestedAt { get; init; } }
 public sealed class ArtifactReferenceRow { public Guid Id { get; init; } public Guid JobId { get; init; } public string Kind { get; init; } = string.Empty; public string Location { get; init; } = string.Empty; public string ContentHash { get; init; } = string.Empty; public DateTimeOffset CreatedAt { get; init; } }
 public sealed class ToolInvocationRow { public Guid Id { get; init; } public Guid JobId { get; init; } public string ToolName { get; init; } = string.Empty; public string RedactedParametersJson { get; init; } = "{}"; public DateTimeOffset StartedAt { get; init; } public DateTimeOffset? CompletedAt { get; init; } }

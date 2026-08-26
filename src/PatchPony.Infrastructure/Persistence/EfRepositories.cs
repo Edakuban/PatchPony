@@ -128,20 +128,61 @@ public sealed class EfSessionRepository(PatchPonyDbContext database) : ISessionR
     public async Task<Session?> GetAsync(SessionId id, CancellationToken cancellationToken = default)
     {
         var row = await database.Sessions.AsNoTracking().SingleOrDefaultAsync(session => session.Id == id.Value, cancellationToken);
-        return row is null ? null : new Session(new SessionId(row.Id), new ProjectId(row.ProjectId), new JobId(row.JobId), row.CreatedAt, row.ExpiresAt);
+        return row is null ? null : ToDomain(row);
     }
 
     public async Task AddAsync(Session session, CancellationToken cancellationToken = default)
     {
-        database.Sessions.Add(new SessionRow
-        {
-            Id = session.Id.Value,
-            ProjectId = session.ProjectId.Value,
-            JobId = session.JobId.Value,
-            CreatedAt = session.CreatedAt,
-            ExpiresAt = session.ExpiresAt
-        });
-
+        database.Sessions.Add(ToRow(session));
         await database.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(Session session, CancellationToken cancellationToken = default)
+    {
+        database.Sessions.Update(ToRow(session));
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Session>> GetDueForCleanupAsync(DateTimeOffset now, int maximumCount, CancellationToken cancellationToken = default)
+    {
+        var rows = await database.Sessions.AsNoTracking()
+            .Where(session => session.ExpiresAt <= now && session.Status != SessionStatus.Closed)
+            .OrderBy(session => session.ExpiresAt)
+            .ThenBy(session => session.Id)
+            .Take(maximumCount)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToDomain).ToList();
+    }
+
+    public async Task<IReadOnlyList<Session>> GetForCrashRecoveryAsync(int maximumCount, CancellationToken cancellationToken = default)
+    {
+        var rows = await database.Sessions.AsNoTracking()
+            .Where(session => session.Status == SessionStatus.Provisioning || session.Status == SessionStatus.Closing)
+            .OrderBy(session => session.StatusChangedAt)
+            .ThenBy(session => session.Id)
+            .Take(maximumCount)
+            .ToListAsync(cancellationToken);
+        return rows.Select(ToDomain).ToList();
+    }
+    private static Session ToDomain(SessionRow row) => new(
+        new SessionId(row.Id),
+        new ProjectId(row.ProjectId),
+        new JobId(row.JobId),
+        row.CreatedAt,
+        row.ExpiresAt,
+        row.Status,
+        row.StatusChangedAt,
+        row.FailureCode);
+
+    private static SessionRow ToRow(Session session) => new()
+    {
+        Id = session.Id.Value,
+        ProjectId = session.ProjectId.Value,
+        JobId = session.JobId.Value,
+        CreatedAt = session.CreatedAt,
+        ExpiresAt = session.ExpiresAt,
+        Status = session.Status,
+        StatusChangedAt = session.StatusChangedAt ?? session.CreatedAt,
+        FailureCode = session.FailureCode
+    };
 }

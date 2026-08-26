@@ -1,0 +1,29 @@
+schemaVersion: 1
+project:
+  id: vocavid
+  displayName: VocaVid
+repository:
+  remoteUrl: https://github.com/Edakuban/VocaVid.git
+  defaultBranch: main
+paths:
+  readable:
+    - VocaVid/**
+    - desktop/**
+    - docs/**
+    - prompts/**
+    - templates/**
+    - tests/**
+    - website/**
+    - workflows/**
+    - README.md
+    - requirements.txt
+  writable: []
+  forbidden:
+    - .git/**
+    - .env
+    - .env.*
+    - '**/.env'
+    - '**/.env.*'
+    - .VocaVid/**
+    - '**/*.db'
+    - '**/*.sqlite'

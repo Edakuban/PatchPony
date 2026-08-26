@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PatchPony.Gateway\PatchPony.Gateway.csproj" />
     <ProjectReference Include="..\..\src\PatchPony.Cli\PatchPony.Cli.csproj" />
+    <ProjectReference Include="..\..\src\PatchPony.Worker\PatchPony.Worker.csproj" />
     <ProjectReference Include="..\..\src\PatchPony.Infrastructure\PatchPony.Infrastructure.csproj" />
   </ItemGroup>
 
