@@ -15,7 +15,7 @@ Diese Entscheidungen gelten für den ersten read-only Pilot und begrenzen die Um
 | Modelle | Für den ersten Test dient `gpt-oss:20b` über `oi.destination.one` als Standardmodell. Weitere Modelle bleiben konfigurierbar. |
 | Modellzugang | Für eine später benötigte interne KI-Funktion nutzt PatchPony den bereits lokal hinterlegten Provider-API-Key; bis zu einer expliziten Entscheidung wird keine interne Modellfunktion implementiert. |
 | Datenhaltung | Prompts, Antworten und Workflow-Metadaten dürfen für interne Mitarbeitende gespeichert werden. Löschfristen werden bewusst später entschieden. |
-| Pilot-Projektbindung | `DEFAULT_PROJECT_ID` wird ausschließlich als globale Open-WebUI-Admin-Einstellung gesetzt und muss in der n8n-Allowlist stehen; Chat-Nutzer können sie nicht wählen. |
+| Pilot-Projektkontext | `DEFAULT_PROJECT_ID` wird ausschließlich als globale Open-WebUI-Admin-Einstellung gesetzt und muss in der n8n-Allowlist stehen. Er ist nur Startkontext; ein projektübergreifender Wechsel benötigt `projects.list` und bleibt auf die serverseitige n8n-Allowlist begrenzt. |
 | Pilot-Identität | Die Pipe leitet nur `owui-sha256:<hash>` aus der Open-WebUI-ID weiter. Keycloak/OIDC-Subjekte ersetzen dieses Übergangsformat später. |
 
 ## Sicherheitsgrenzen des Piloten

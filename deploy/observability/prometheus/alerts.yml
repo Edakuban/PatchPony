@@ -1,0 +1,33 @@
+groups:
+  - name: patchpony-pilot
+    rules:
+      - alert: PatchPonyPostgresExporterDown
+        expr: up{job="patchpony-postgres-exporter"} == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: PatchPony PostgreSQL exporter is unavailable.
+      - alert: PatchPonyJobQueueStalled
+        expr: patchpony_job_queue_depth_value > 0 and patchpony_job_queue_oldest_seconds_value > 900
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: Eligible PatchPony jobs have waited more than 15 minutes.
+      - alert: PatchPonyJobFailures
+        expr: patchpony_jobs_failed_last_15m_value > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: PatchPony has failed jobs in the last 15 minutes.
+      - alert: PatchPonyExpiredSession
+        expr: patchpony_sessions_expired_unresolved_value > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: PatchPony has a non-terminal session past its lease.
+      - alert: PatchPonyDatabaseGrowth
+        expr: pg_database_size_bytes{datname="patchpony"} > 10737418240
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: PatchPony PostgreSQL database exceeds the initial 10 GiB pilot limit.

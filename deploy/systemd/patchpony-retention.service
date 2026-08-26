@@ -1,0 +1,12 @@
+[Unit]
+Description=PatchPony bounded PostgreSQL retention
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/patchpony/runtime.env
+Environment=PATCHPONY_RETENTION_COMPOSE_DIRECTORY=/srv/patchpony
+Environment=PATCHPONY_RETENTION_BATCH_SIZE=500
+Environment=PATCHPONY_RETENTION_MAX_BATCHES=10
+Environment=PATCHPONY_RETENTION_CONFIRM=DELETE_ONLY_APPROVED_PATCHPONY_RETENTION
+ExecStart=/usr/bin/env bash /srv/patchpony/deploy/host/retention.sh apply

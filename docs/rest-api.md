@@ -39,3 +39,6 @@ Für eine autorisierte Projekt-Session stehen diese Routen bereit; alle verlange
 - `GET /api/v1/projects/{projectId}/sessions/{sessionId}/tests/{executionId}` – begrenztes, gespeichertes Ergebnis
 
 Der Gateway startet niemals Docker. Die Ausführung erfolgt ausschließlich nach Übergabe an den privaten Worker.
+## Knowledge audit (reviewer)
+
+`GET /api/v1/runtime/audit/knowledge?limit=100` returns the bounded, reviewer-only Knowledge trail. It contains only process-scoped fingerprints, operation outcomes, revisions and counts—never Vault content, paths, search text or owner names. Details: [knowledge-audit.md](knowledge-audit.md).

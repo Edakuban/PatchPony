@@ -10,7 +10,7 @@ namespace PatchPony.Gateway;
 [McpServerToolType]
 public sealed class ConfigMcpTools(ConfigSessionCatalog sessions, ProjectToolAuthorizationService authorization, IHttpContextAccessor httpContextAccessor, ICorrelationContext correlations)
 {
-    [McpServerTool(Name = "config.validate", Title = "Validate a session configuration document", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false, UseStructuredContent = true)]
+    [McpServerTool(Name = "config.validate", Title = "Validate a session configuration document", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false, UseStructuredContent = false)]
     [Description("Validates one existing configuration document in an authorized server-configured session. Filesystem paths are never supplied by the caller.")]
     public CallToolResult Validate(string projectId, string sessionId, string path, string format, string? schemaId = null, CancellationToken cancellationToken = default)
     {
@@ -20,7 +20,7 @@ public sealed class ConfigMcpTools(ConfigSessionCatalog sessions, ProjectToolAut
         return result.IsSuccess ? ToMcp(result.Value!) : GatewayErrorAdapter.ToMcpResult(result.Error, correlations);
     }
 
-    [McpServerTool(Name = "config.patch", Title = "Patch and validate a session configuration document", ReadOnly = false, Idempotent = false, Destructive = false, OpenWorld = false, UseStructuredContent = true)]
+    [McpServerTool(Name = "config.patch", Title = "Patch and validate a session configuration document", ReadOnly = false, Idempotent = false, Destructive = false, OpenWorld = false, UseStructuredContent = false)]
     [Description("Applies a base64-encoded UTF-8 full-document replacement in an authorized server-configured session. The expected SHA-256 must match; invalid parser or schema results are rolled back.")]
     public CallToolResult Patch(string projectId, string sessionId, string path, string format, string expectedSourceSha256, string replacementBase64, string? schemaId = null, CancellationToken cancellationToken = default)
     {

@@ -1,6 +1,6 @@
 # Pilotquellen für den Read-only-Agenten
 
-I6.5 stellt zwei lokal gemountete, projektgebundene Quellen bereit: `patchpony` und `vocavid`. Die MCP-Tools `source.search` und `source.read` akzeptieren immer eine Projekt-ID und prüfen zusätzlich die Projekt-Claims des aufrufenden Dienstkontos.
+I6.5 stellt drei lokal gemountete, projektgebundene Quellen bereit: `patchpony`, `vocavid` und `one-data`. Das MCP-Tool `projects.list` zeigt ausschließlich die Projekt-ID und den Anzeigenamen der für das aufrufende Dienstkonto freigegebenen Quellen. Die MCP-Tools `source.search` und `source.read` akzeptieren immer eine Projekt-ID und prüfen zusätzlich die Projekt-Claims des aufrufenden Dienstkontos.
 
 Jede Quelle besitzt ein eigenes Manifest unter `integrations/pilot-projects/`. Dieses ist die verbindliche Allowlist. Nicht freigegebene Pfade, insbesondere `.env`, `.git`, Datenbanken und lokale Konfiguration, sind auch über die MCP-Tools nicht lesbar.
 
@@ -11,7 +11,7 @@ Die MCP-Rückgaben liefern Zitate strukturiert als `projectId`, `path`, `startLi
 ## Lokale Vorbereitung
 
 ```text
-PATCHPONY_AUTH__N8N__PROJECTS=patchpony,vocavid
+PATCHPONY__AUTH__N8N__PROJECTS=patchpony,vocavid
 ```
 
 Danach den Compose-Stack neu bauen/starten. Fehlt ein gemounteter Checkout oder sein Manifest, startet der Gateway fail-closed nicht mit einer unvollständigen Quellenkonfiguration.

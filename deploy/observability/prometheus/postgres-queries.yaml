@@ -1,0 +1,30 @@
+patchpony_job_queue_depth:
+  query: "SELECT count(*)::double precision AS value FROM patchpony.job_queue WHERE available_at <= now()"
+  metrics:
+    - value:
+        usage: "GAUGE"
+        description: "PatchPony jobs currently eligible for processing."
+patchpony_jobs_failed_last_15m:
+  query: "SELECT count(*)::double precision AS value FROM patchpony.jobs WHERE status = 'Failed' AND created_at >= now() - interval '15 minutes'"
+  metrics:
+    - value:
+        usage: "GAUGE"
+        description: "PatchPony jobs created with Failed status in the last fifteen minutes."
+patchpony_sessions_active:
+  query: "SELECT count(*)::double precision AS value FROM patchpony.sessions WHERE status IN ('Created', 'Provisioning', 'Active', 'Closing')"
+  metrics:
+    - value:
+        usage: "GAUGE"
+        description: "PatchPony non-terminal sessions."
+patchpony_sessions_expired_unresolved:
+  query: "SELECT count(*)::double precision AS value FROM patchpony.sessions WHERE expires_at < now() AND status NOT IN ('Closed', 'Expired', 'Failed')"
+  metrics:
+    - value:
+        usage: "GAUGE"
+        description: "PatchPony sessions past their lease that are not terminal."
+patchpony_job_queue_oldest_seconds:
+  query: "SELECT COALESCE(EXTRACT(EPOCH FROM (now() - min(enqueued_at))), 0)::double precision AS value FROM patchpony.job_queue WHERE available_at <= now()"
+  metrics:
+    - value:
+        usage: "GAUGE"
+        description: "Age of the oldest eligible PatchPony queue item in seconds."

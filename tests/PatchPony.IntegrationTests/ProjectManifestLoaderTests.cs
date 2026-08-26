@@ -17,6 +17,18 @@ public sealed class ProjectManifestLoaderTests
         Assert.Equal(["src/**", "docs/**"], result.Value.Paths.Readable);
     }
 
+    [Theory]
+    [InlineData("patchpony.yaml", "patchpony")]
+    [InlineData("vocavid.yaml", "vocavid")]
+    [InlineData("one-data.yaml", "one-data")]
+    public void PilotSourceManifest_IsValid(string fileName, string expectedProjectId)
+    {
+        var root = FindRepositoryRoot();
+        var result = loader.Load(File.ReadAllText(Path.Combine(root, "integrations", "pilot-projects", fileName)));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(expectedProjectId, result.Value!.Project.Id);
+    }
     [Fact]
     public void Load_RejectsUnknownFields()
     {
@@ -48,6 +60,15 @@ public sealed class ProjectManifestLoaderTests
         Assert.Equal("manifest.invalid", result.Error.Code);
     }
 
+    private static string FindRepositoryRoot()
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "PLAN.md"))) return directory.FullName;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate the PatchPony repository root.");
+    }
     private const string ValidManifest = """
         schemaVersion: 1
         project:

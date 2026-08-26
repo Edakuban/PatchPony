@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using PatchPony.Core.Application;
 using PatchPony.Core.Common;
+using PatchPony.Core.Knowledge;
 using PatchPony.Core.Workflows;
 
 namespace PatchPony.Gateway;
@@ -46,6 +47,9 @@ public static class ApiV1Endpoints
         api.MapGet("/runtime/audit/access", (int? limit, IAccessDecisionAudit audit) => Results.Ok(audit.GetRecent(limit ?? 100)))
             .RequireAuthorization(PatchPonyAuthorization.RolePolicy(PatchPonyRoles.Reviewer))
             .WithName("RecentAccessDecisionAudit");
+        api.MapGet("/runtime/audit/knowledge", (int? limit, IKnowledgeAuditSink audit) => Results.Ok(audit.GetRecent(limit ?? 100)))
+            .RequireAuthorization(PatchPonyAuthorization.RolePolicy(PatchPonyRoles.Reviewer))
+            .WithName("RecentKnowledgeAudit");
         api.MapGet("/runtime/identity", (ClaimsPrincipal user) => Results.Ok(new RuntimeIdentity(
                 user.FindFirst("sub")?.Value ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "unknown",
                 user.FindFirst("auth_mode")?.Value ?? user.Identity?.AuthenticationType ?? "unknown",

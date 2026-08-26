@@ -194,7 +194,7 @@ public sealed class GatewayHealthEndpointTests : IClassFixture<WebApplicationFac
             .EnumerateArray()
             .ToDictionary(tool => tool.GetProperty("name").GetString()!, StringComparer.Ordinal);
 
-        Assert.Equal(["config.patch", "config.validate", "knowledge.links", "knowledge.read", "knowledge.search", "knowledge.tree", "runtime.status", "runtime.validate_correlation", "source.read", "source.search", "tests.list", "tests.result", "tests.run"], tools.Keys.OrderBy(name => name, StringComparer.Ordinal));
+        Assert.Equal(["config.patch", "config.validate", "knowledge.links", "knowledge.read", "knowledge.search", "knowledge.tree", "projects.list", "runtime.status", "runtime.validate_correlation", "source.read", "source.search", "tests.list", "tests.result", "tests.run"], tools.Keys.OrderBy(name => name, StringComparer.Ordinal));
 
         var configValidate = tools["config.validate"];
         Assert.Equal("Validate a session configuration document", configValidate.GetProperty("title").GetString());
@@ -216,17 +216,15 @@ public sealed class GatewayHealthEndpointTests : IClassFixture<WebApplicationFac
         AssertReadOnlyIdempotent(tools["knowledge.search"]);
         AssertReadOnlyIdempotent(tools["knowledge.read"]);
         AssertReadOnlyIdempotent(tools["knowledge.links"]);
+        var projectsList = tools["projects.list"];
+        Assert.Equal("List authorized pilot projects", projectsList.GetProperty("title").GetString());
+        AssertReadOnlyIdempotent(projectsList);
         var status = tools["runtime.status"];
         Assert.Equal("PatchPony runtime status", status.GetProperty("title").GetString());
         AssertReadOnlyIdempotent(status);
         Assert.Equal("object", status.GetProperty("inputSchema").GetProperty("type").GetString());
         Assert.Empty(status.GetProperty("inputSchema").GetProperty("properties").EnumerateObject());
-        var outputSchema = status.GetProperty("outputSchema");
-        Assert.Equal("object", outputSchema.GetProperty("type").GetString());
-        Assert.Equal(["correlationId", "mode", "service"], outputSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()).OrderBy(name => name, StringComparer.Ordinal));
-        Assert.Equal("string", outputSchema.GetProperty("properties").GetProperty("service").GetProperty("type").GetString());
-        Assert.Equal("string", outputSchema.GetProperty("properties").GetProperty("mode").GetProperty("type").GetString());
-        Assert.Equal("string", outputSchema.GetProperty("properties").GetProperty("correlationId").GetProperty("type").GetString());
+        Assert.All(tools.Values, tool => Assert.False(tool.TryGetProperty("outputSchema", out _)));
 
         var validateCorrelation = tools["runtime.validate_correlation"];
         Assert.Equal("Validate correlation identifier", validateCorrelation.GetProperty("title").GetString());
@@ -237,6 +235,32 @@ public sealed class GatewayHealthEndpointTests : IClassFixture<WebApplicationFac
         Assert.Equal(["correlationId"], inputSchema.GetProperty("required").EnumerateArray().Select(value => value.GetString()));
     }
 
+    [Fact]
+    public async Task McpProjectsList_ReturnsOnlyAuthorizedPilotProjectMetadata()
+    {
+        var repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var manifest = Path.Combine(repositoryRoot, "integrations", "pilot-projects", "patchpony.yaml");
+        await using var sourceFactory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("environment", "Development");
+            builder.UseSetting("PatchPony:Auth:DevelopmentPassword", "projects-test-password");
+            builder.UseSetting("PatchPony:Auth:DevelopmentProjects", "patchpony");
+            builder.UseSetting("PatchPony:PilotSources:Projects:0:Id", "patchpony");
+            builder.UseSetting("PatchPony:PilotSources:Projects:0:CheckoutRoot", repositoryRoot);
+            builder.UseSetting("PatchPony:PilotSources:Projects:0:ManifestFile", manifest);
+        });
+        using var sourceClient = sourceFactory.CreateClient();
+        sourceClient.DefaultRequestHeaders.Add(DevelopmentPasswordAuthenticationHandler.HeaderName, "projects-test-password");
+
+        using var response = await sourceClient.SendAsync(SendMcpToolCall(sourceClient, "projects.list", "{}"));
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("patchpony", body, StringComparison.Ordinal);
+        Assert.Contains("PatchPony", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("CheckoutRoot", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("remoteUrl", body, StringComparison.OrdinalIgnoreCase);
+    }
     [Fact]
     public async Task McpSourceRead_ReturnsAProjectBoundCitationAndRejectsForbiddenFiles()
     {

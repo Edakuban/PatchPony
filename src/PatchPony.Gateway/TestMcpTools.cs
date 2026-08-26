@@ -10,7 +10,7 @@ namespace PatchPony.Gateway;
 [McpServerToolType]
 public sealed class TestMcpTools(TestSessionCatalog sessions, ProjectToolAuthorizationService authorization, IHttpContextAccessor context, ICorrelationContext correlations)
 {
-    [McpServerTool(Name = "tests.list", Title = "List registered session tests", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false, UseStructuredContent = true)]
+    [McpServerTool(Name = "tests.list", Title = "List registered session tests", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false, UseStructuredContent = false)]
     [Description("Lists only server-registered test command IDs for one authorized session.")]
     public CallToolResult List(string projectId, string sessionId)
     {
@@ -20,7 +20,7 @@ public sealed class TestMcpTools(TestSessionCatalog sessions, ProjectToolAuthori
         return result.IsSuccess ? ToMcp(result.Value!) : GatewayErrorAdapter.ToMcpResult(result.Error, correlations);
     }
 
-    [McpServerTool(Name = "tests.run", Title = "Request a registered session test", ReadOnly = false, Idempotent = false, Destructive = false, OpenWorld = false, UseStructuredContent = true)]
+    [McpServerTool(Name = "tests.run", Title = "Request a registered session test", ReadOnly = false, Idempotent = false, Destructive = false, OpenWorld = false, UseStructuredContent = false)]
     [Description("Queues one server-registered test command for the private worker. Image, arguments, paths and Docker options cannot be supplied.")]
     public CallToolResult Run(string projectId, string sessionId, string commandId, CancellationToken cancellationToken)
     {
@@ -30,7 +30,7 @@ public sealed class TestMcpTools(TestSessionCatalog sessions, ProjectToolAuthori
         return result.IsSuccess ? ToMcp(result.Value!) : GatewayErrorAdapter.ToMcpResult(result.Error, correlations);
     }
 
-    [McpServerTool(Name = "tests.result", Title = "Read a completed session test", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false, UseStructuredContent = true)]
+    [McpServerTool(Name = "tests.result", Title = "Read a completed session test", ReadOnly = true, Idempotent = true, Destructive = false, OpenWorld = false, UseStructuredContent = false)]
     [Description("Reads one bounded result previously written by the private worker for an authorized session.")]
     public CallToolResult Result(string projectId, string sessionId, string executionId)
     {

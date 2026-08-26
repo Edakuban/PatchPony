@@ -7,9 +7,9 @@ ASP.NET-Core-JWT-Validator. Für einen produktiven Identity Provider werden
 nur diese Konfigurationswerte benötigt:
 
 ```text
-PATCHPONY_AUTH__OIDC__AUTHORITY=https://identity.example.com
-PATCHPONY_AUTH__OIDC__AUDIENCE=patchpony-api
-PATCHPONY_AUTH__OIDC__REQUIREHTTPSMETADATA=true
+PATCHPONY__AUTH__OIDC__AUTHORITY=https://identity.example.com
+PATCHPONY__AUTH__OIDC__AUDIENCE=patchpony-api
+PATCHPONY__AUTH__OIDC__REQUIREHTTPSMETADATA=true
 ```
 
 Der Validator nutzt die OIDC-Metadaten der `Authority` und prüft damit
@@ -21,7 +21,7 @@ zur noch offenen Identity-Provider-Entscheidung und werden nicht eingecheckt.
 
 Ausschließlich mit `ASPNETCORE_ENVIRONMENT=Development` akzeptiert PatchPony
 zusätzlich den Header `X-PatchPony-Development-Password`. Sein Wert wird mit
-`PATCHPONY_AUTH__DEVELOPMENTPASSWORD` verglichen und nie geloggt. Außerhalb
+`PATCHPONY__AUTH__DEVELOPMENTPASSWORD` verglichen und nie geloggt. Außerhalb
 von Development ist dieses Schema nicht erfolgreich; es ersetzt weder OIDC
 noch produktive Benutzerverwaltung.
 
@@ -35,7 +35,7 @@ Rollen, Scopes und der n8n-Service-Account folgen in I5.2 und I5.3.
 ## n8n-Service-Account
 
 n8n verwendet kein Benutzerpasswort und keinen Benutzer-JWT. Stattdessen wird
-ein separater Secret-Wert über `PATCHPONY_AUTH__N8N__TOKEN` hinterlegt und als
+ein separater Secret-Wert über `PATCHPONY__AUTH__N8N__TOKEN` hinterlegt und als
 `X-PatchPony-Service-Token` gesendet. Ein gültiger Wert erzeugt ausschließlich
 die Identität `service-n8n` mit dem Modus `service-token`; der Vergleich erfolgt
 konstantzeitig und der Secret-Wert wird nicht geloggt.
@@ -78,9 +78,9 @@ werden mit `authorization.forbidden` und HTTP 403 abgelehnt.
 Für lokale Tests können Projekte explizit und kommasepariert gesetzt werden:
 
 ```text
-PATCHPONY_AUTH__DEVELOPMENTPROJECTS=demo-project
-PATCHPONY_AUTH__N8N__PROJECTS=demo-project
-PATCHPONY_AUTH__DEVELOPMENTCONFIGEDITORPROJECTS=demo-project
+PATCHPONY__AUTH__DEVELOPMENTPROJECTS=demo-project
+PATCHPONY__AUTH__N8N__PROJECTS=demo-project
+PATCHPONY__AUTH__DEVELOPMENTCONFIGEDITORPROJECTS=demo-project
 ```
 
 Produktive OIDC-Tokens müssen eigene `project`- beziehungsweise `projects`-

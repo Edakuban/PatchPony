@@ -12,6 +12,12 @@ services:
       retries: 10
     volumes:
       - postgres-data:/var/lib/postgresql
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - data
 
   gateway:
     build:
@@ -19,15 +25,23 @@ services:
       dockerfile: src/PatchPony.Gateway/Dockerfile
     environment:
       ASPNETCORE_URLS: http://+:8080
+      # Local Compose is deliberately Development so the internal Swagger UI is available via Caddy.
+      ASPNETCORE_ENVIRONMENT: ${PATCHPONY_ASPNETCORE_ENVIRONMENT:-Development}
       # The n8n service account is fail-closed: do not start an integration without its own secret.
-      PATCHPONY_AUTH__N8N__TOKEN: ${PATCHPONY_AUTH__N8N__TOKEN:?Set PATCHPONY_AUTH__N8N__TOKEN in .env}
-      PATCHPONY_AUTH__N8N__PROJECTS: ${PATCHPONY_AUTH__N8N__PROJECTS:-patchpony,vocavid}
-      PATCHPONY_PILOTSOURCES__PROJECTS__0__ID: patchpony
-      PATCHPONY_PILOTSOURCES__PROJECTS__0__CHECKOUTROOT: /sources/patchpony
-      PATCHPONY_PILOTSOURCES__PROJECTS__0__MANIFESTFILE: /manifests/patchpony.yaml
-      PATCHPONY_PILOTSOURCES__PROJECTS__1__ID: vocavid
-      PATCHPONY_PILOTSOURCES__PROJECTS__1__CHECKOUTROOT: /sources/vocavid
-      PATCHPONY_PILOTSOURCES__PROJECTS__1__MANIFESTFILE: /manifests/vocavid.yaml
+      PATCHPONY__AUTH__N8N__TOKEN: ${PATCHPONY__AUTH__N8N__TOKEN:?Set PATCHPONY__AUTH__N8N__TOKEN in .env}
+      PATCHPONY__AUTH__N8N__PROJECTS: ${PATCHPONY__AUTH__N8N__PROJECTS:-patchpony,vocavid,one-data}
+      # Development-only identity for local Swagger/REST testing; production overlay remains Production.
+      PATCHPONY__AUTH__DEVELOPMENTPASSWORD: ${PATCHPONY__AUTH__DEVELOPMENTPASSWORD:-}
+      PATCHPONY__AUTH__DEVELOPMENTPROJECTS: ${PATCHPONY__AUTH__DEVELOPMENTPROJECTS:-patchpony,vocavid,one-data}
+      PATCHPONY__PILOTSOURCES__PROJECTS__0__ID: patchpony
+      PATCHPONY__PILOTSOURCES__PROJECTS__0__CHECKOUTROOT: /sources/patchpony
+      PATCHPONY__PILOTSOURCES__PROJECTS__0__MANIFESTFILE: /manifests/patchpony.yaml
+      PATCHPONY__PILOTSOURCES__PROJECTS__1__ID: vocavid
+      PATCHPONY__PILOTSOURCES__PROJECTS__1__CHECKOUTROOT: /sources/vocavid
+      PATCHPONY__PILOTSOURCES__PROJECTS__1__MANIFESTFILE: /manifests/vocavid.yaml
+      PATCHPONY__PILOTSOURCES__PROJECTS__2__ID: one-data
+      PATCHPONY__PILOTSOURCES__PROJECTS__2__CHECKOUTROOT: /sources/one-data
+      PATCHPONY__PILOTSOURCES__PROJECTS__2__MANIFESTFILE: /manifests/one-data.yaml
     volumes:
       # Only manifest-approved source roots are mounted; .env and .git never enter the Gateway container.
       - ./src:/sources/patchpony/src:ro
@@ -44,10 +58,23 @@ services:
       - ./pilot-sources/VocaVid/workflows:/sources/vocavid/workflows:ro
       - ./pilot-sources/VocaVid/README.md:/sources/vocavid/README.md:ro
       - ./pilot-sources/VocaVid/requirements.txt:/sources/vocavid/requirements.txt:ro
+      - ./pilot-sources/one-data/apps:/sources/one-data/apps:ro
+      - ./pilot-sources/one-data/docs:/sources/one-data/docs:ro
+      - ./pilot-sources/one-data/packages:/sources/one-data/packages:ro
+      - ./pilot-sources/one-data/tools:/sources/one-data/tools:ro
+      - ./pilot-sources/one-data/README.md:/sources/one-data/README.md:ro
+      - ./pilot-sources/one-data/one-data.slnx:/sources/one-data/one-data.slnx:ro
       - ./integrations/pilot-projects:/manifests:ro
     depends_on:
       postgres:
         condition: service_healthy
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - edge
+      - data
     expose:
       - "8080"
     healthcheck:
@@ -68,16 +95,23 @@ services:
       - ./deploy/caddy/Caddyfile.local:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
+    networks:
+      - edge
   worker:
     build:
       context: .
       dockerfile: src/PatchPony.Worker/Dockerfile
     environment:
-      PATCHPONY_WORKER__ID: ${PATCHPONY_WORKER__ID:-patchpony-worker-local}
-      PATCHPONY_WORKER__CLAIMSIGNINGKEY: ${PATCHPONY_WORKER__CLAIMSIGNINGKEY:?Set PATCHPONY_WORKER__CLAIMSIGNINGKEY in .env}
+      PATCHPONY__WORKER__ID: ${PATCHPONY__WORKER__ID:-patchpony-worker-local}
+      PATCHPONY__WORKER__CLAIMSIGNINGKEY: ${PATCHPONY__WORKER__CLAIMSIGNINGKEY:?Set PATCHPONY__WORKER__CLAIMSIGNINGKEY in .env}
     depends_on:
       postgres:
         condition: service_healthy
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    network_mode: none
     healthcheck:
       test: ["CMD-SHELL", "grep -aq 'PatchPony.Worker' /proc/1/cmdline"]
       interval: 5s
@@ -89,3 +123,8 @@ volumes:
   postgres-data:
   caddy-data:
   caddy-config:
+
+networks:
+  edge:
+  data:
+    internal: true

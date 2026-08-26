@@ -21,8 +21,8 @@ Der Signaturvergleich erfolgt konstantzeitig.
 Der Worker benötigt beim Start zwingend:
 
 ```text
-PATCHPONY_WORKER__ID=patchpony-worker-local
-PATCHPONY_WORKER__CLAIMSIGNINGKEY=<Base64-kodierte zufaellige 32 Bytes>
+PATCHPONY__WORKER__ID=patchpony-worker-local
+PATCHPONY__WORKER__CLAIMSIGNINGKEY=<Base64-kodierte zufaellige 32 Bytes>
 ```
 
 Der Schlüssel ist ein eigenes internes Secret. Er darf nicht aus

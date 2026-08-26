@@ -43,7 +43,7 @@ public sealed class RipgrepSourceSearchServiceTests
             var result = await search.SearchAsync("needle");
 
             Assert.True(result.IsSuccess);
-            Assert.Equal(20, result.Value!.Matches.Count);
+            Assert.Equal(5, result.Value!.Matches.Count);
             Assert.True(result.Value.IsTruncated);
         }
         finally

@@ -16,3 +16,10 @@ PatchPony-logo-v3.png
 PatchPony-one-award-pitch.pptx
 # Local, read-only pilot checkouts; never version their nested repositories.
 pilot-sources/
+
+# Local development TLS root export.
+caddy-local-root.crt
+__pycache__/
+# Temporary Office lock files.
+~$*.ppt
+~$*.pptx

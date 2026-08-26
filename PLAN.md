@@ -145,7 +145,7 @@ Ziel: Alle Entscheidungen treffen, die den Projektzuschnitt der ersten sechs Ite
 - [ ] `I0.7` Deployment-Topologie von n8n und Open WebUI dokumentieren.
 - [ ] `I0.8` Erste unterstützte Projektsprachen und Testumgebungen auswählen.
 - [ ] `I0.9` Aufbewahrungsfristen für Jobs, Sessions, Logs und Anhänge festlegen.
-- [ ] `I0.10` Initiales Bedrohungsmodell erstellen.
+- [x] `I0.10` Versioniertes Threat Model mit Trust Boundaries, Bedrohungen, Controls und Annahmen erstellt.
 - [ ] `I0.11` ADR-Verzeichnis und ADR-Template definieren.
 - [ ] `I0.12` Product-Backlog und Issue-Labels anlegen.
 - [ ] `I0.13` Repository, Pfadmodell und fachliche Eigentümer des Obsidian-Wissensvaults festlegen.
@@ -957,13 +957,13 @@ Ziel: Use-Case 4 funktioniert vom Auffinden firmenweiten Wissens bis zu einer ko
 - [x] `I13.4` YAML-Frontmatter mit Alias-, Tiefen- und Größenlimits sowie optionalem serverseitigem Schema validiert.
 - [x] `I13.5` Attachment-Allowlist und Einzel-, Gesamt- sowie Anzahlgrenzen implementiert (default-deny).
 - [x] `I13.6` `.obsidian/plugins/**`, `.obsidian/snippets/**`, Skripte und ausführbare Inhalte zentral technisch gesperrt.
-- [ ] `I13.7` **← nächster Schritt** `knowledge.patch` als semantisches Werkzeug für freigegebene Markdown- und Frontmatter-Änderungen implementieren.
-- [ ] `I13.8` Link- und Backlink-Auswirkungsanalyse für Umbenennungen und Änderungen implementieren.
-- [ ] `I13.9` Knowledge-Owner- und Reviewer-Zuordnung pro Vault-Bereich konfigurieren.
-- [ ] `I13.10` Vault-Änderungen über Session, Bot-Branch, Diff, Commit, Push und Merge Request führen.
-- [ ] `I13.11` Open-WebUI-Workflow für Wissensfragen und explizite Pflegeaufträge ergänzen.
-- [ ] `I13.12` Evaluationssatz aus realen Wissensfragen und typischen Dokumentationsänderungen erstellen.
-- [ ] `I13.13` Audit um gelesene Vault-Seiten, Linkauswirkungen und Knowledge Owner erweitern.
+- [x] `I13.7` Semantische `knowledge.patch`-Proposal-Operationen für freigegebene Markdown- und Frontmatter-Änderungen implementiert (ohne Dateischreibzugriff).
+- [x] `I13.8` Reine Link- und Backlink-Auswirkungsanalyse für Umbenennungen und Änderungen implementiert (ohne Vault-Zugriff).
+- [x] `I13.9` Serverseitige Knowledge-Owner- und unabhängige Reviewer-Zuordnung pro Vault-Bereich konfigurierbar gemacht (default-deny).
+- [x] `I13.10` Vault-Änderungen über aktive Session, Bot-Branch, Diff/Linkprüfung, Commit, menschlich gegateten Push und Merge Request geführt (kein Merge).
+- [x] `I13.11` Open-WebUI-Workflow für Wissensfragen und explizite Pflegeaufträge ergänzt; Pflegeaufträge erzeugen ausschließlich einen read-only recherchierten Entwurf.
+- [x] `I13.12` Versionierten, datenfreien Evaluationssatz für reale Pilot-Wissensfragen, kleine Pflegeentwürfe und Sicherheitsgrenzen angelegt; Ausführung bleibt bis zur Auswahl freigegebener Vault-Beispiele gesperrt.
+- [x] `I13.13` Inhaltssicheren, reviewer-geschützten Knowledge-Audit-Trail für Leseoperationen, Linkauswirkungen sowie aufgelöste Owner/Reviewer ergänzt; Pfade und Personen bleiben prozessgebundene Fingerprints.
 
 ### 19.2 Grenzen für automatische Wissensänderungen
 
@@ -1025,19 +1025,19 @@ Ziel: PatchPony kann für ein begrenztes Pilotprojekt mit definiertem Betrieb, M
 
 ### 20.1 Arbeitspakete
 
-- [ ] `I14.1` Debian-13-Produktionshost härten.
-- [ ] `I14.2` Docker Rootless oder begründete Alternative produktiv konfigurieren.
-- [ ] `I14.3` Firewall, internes Netzwerk und Reverse Proxy finalisieren.
-- [ ] `I14.4` Backup und Restore für PostgreSQL testen.
-- [ ] `I14.5` Rotation aller Service- und Bot-Credentials testen.
-- [ ] `I14.6` Dashboards und Alarme für Jobs, Fehler, Queue, Sessions und Ressourcen erstellen.
-- [ ] `I14.7` Log- und Daten-Retention automatisieren.
-- [ ] `I14.8` Dependency-, Container- und SBOM-Scanning in CI finalisieren.
-- [ ] `I14.9` Last- und Parallelitätstests durchführen.
-- [ ] `I14.10` Security-Review gegen das Threat Model durchführen.
-- [ ] `I14.11` Incident-, Recovery- und Kill-Switch-Runbooks erstellen.
-- [ ] `I14.12` kontrollierten Pilot mit kleiner Benutzergruppe durchführen.
-- [ ] `I14.13` Pilotmetriken auswerten und V1.1-Backlog erstellen.
+- [x] `I14.1` Reproduzierbare Debian-13-Hostbaseline mit explizitem SSH-Sicherheitsgate, automatischen Security-Updates, AppArmor, auditd und Zeitsynchronisation angelegt; Ausführung und Evidenz erfolgen bewusst erst auf dem Produktionshost.
+- [x] `I14.2` Dedizierten Rootless-Docker-Daemon für den privaten Sandbox-Worker mit cgroup-v2-Gate, eigener Systemd-User-Unit und Socket-/Mount-Minimierung vorbereitet; rootful Docker und Docker-Group-Zugang bleiben ausgeschlossen.
+- [x] `I14.3` Default-drop nftables-Edge-Policy, getrennte Compose-Edge-/Daten-Netze, Loopback-only Rootless-Gateway und nativen Caddy-HTTPS-Proxy vorbereitet; nur SSH sowie 80/443 sind als Host-Eingang vorgesehen.
+- [x] `I14.4` Isolierte Backup-/Restore-Rehearsal für PostgreSQL erstellt und geprüft.
+- [x] `I14.5` Kontrollierten Rotationsablauf für Service- und Bot-Credentials mit Validierung, lokaler Rücknahme und Betriebschecks erstellt.
+- [x] `I14.6` Privates Prometheus-/Grafana-Dashboard und Alarmregeln für Jobs, Fehler, Queue, Sessions und Datenbankressourcen bereitgestellt.
+- [x] `I14.7` Dry-run-first, batchbegrenzte Daten- und Log-Retention mit täglichem Rootless-Timer bereitgestellt.
+- [x] `I14.8` Dependency-Review, transitive NuGet- und Container-Scans sowie CycloneDX-SBOM-Artefakte in CI finalisiert.
+- [x] `I14.9` Reproduzierbare, lokale k6-Last- und Parallelitätstests inklusive Rate-Limit-Schutzszenario vorbereitet; echte Pilotausführung bleibt evidenzpflichtig.
+- [x] `I14.10` Evidenzbasiertes Security-Review gegen das versionierte Threat Model durchgeführt; Pilot-Blocker ausdrücklich dokumentiert.
+- [x] `I14.11` Incident-, Recovery- und Kill-Switch-Runbooks mit reversiblem Gateway-/Worker-Containment erstellt.
+- [ ] `I14.12` **← freigabe- und evidenzpflichtig** kontrollierten Pilot mit kleiner Benutzergruppe durchführen; Runbook und Gates vorbereitet.
+- [ ] `I14.13` **← wartet auf I14.12-Evidenz** Pilotmetriken auswerten und V1.1-Backlog erstellen; datensparsame Auswertungsstruktur vorbereitet.
 
 ### 20.2 Betriebsmetriken
 

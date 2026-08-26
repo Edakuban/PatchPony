@@ -1,5 +1,5 @@
 {
-  "name": "PatchPony · Read-only Agent",
+  "name": "PatchPony · Knowledge Agent",
   "nodes": [
     {
       "parameters": {
@@ -26,7 +26,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const envelope = $input.first().json;\nconst input = envelope.body ?? envelope;\nconst question = typeof input.question === 'string' ? input.question.trim() : '';\nconst requestId = typeof input.requestId === 'string' ? input.requestId : '';\nconst projectId = typeof input.projectId === 'string' ? input.projectId : '';\nconst requester = input.requester;\nconst validProject = /^[a-z0-9][a-z0-9-]{0,63}$/.test(projectId);\nconst validRequester = requester && requester.source === 'open-webui' && typeof requester.subject === 'string' && /^owui-sha256:[0-9a-f]{64}$/.test(requester.subject);\nconst validRequestId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId);\nif (input.source !== 'open-webui' || !validRequestId || !validProject || !validRequester || question.length === 0 || question.length > 12000) {\n  throw new Error('Invalid PatchPony read-only request.');\n}\nreturn [{ json: { requestId, projectId, requester, question } }];"
+        "jsCode": "const envelope = $input.first().json;\nconst input = envelope.body ?? envelope;\nconst question = typeof input.question === 'string' ? input.question.trim() : '';\nconst requestId = typeof input.requestId === 'string' ? input.requestId : '';\nconst projectId = typeof input.projectId === 'string' ? input.projectId : '';\nconst requester = input.requester;\nconst intent = typeof input.intent === 'string' ? input.intent : '';\nconst validProject = /^[a-z0-9][a-z0-9-]{0,63}$/.test(projectId);\nconst validRequester = requester && requester.source === 'open-webui' && typeof requester.subject === 'string' && /^owui-sha256:[0-9a-f]{64}$/.test(requester.subject);\nconst validRequestId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId);\nif (input.source !== 'open-webui' || !validRequestId || !validProject || !validRequester || !['knowledge-question', 'knowledge-maintenance'].includes(intent) || question.length === 0 || question.length > 12000) {\n  throw new Error('Invalid PatchPony knowledge request.');\n}\nreturn [{ json: { requestId, projectId, requester, intent, question } }];"
       },
       "id": "d325089f-7777-4aef-8ef1-16df05ad497e",
       "name": "Validate minimal request",
@@ -40,9 +40,9 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.question }}",
+        "text": "={{ \"Initial project ID (starting context, not a restriction): \" + $json.projectId + \"\\nIntent: \" + $json.intent + \"\\n\\n\" + $json.question }}",
         "options": {
-          "systemMessage": "Du bist der read-only PatchPony-Assistent. Beantworte ausschließlich Fragen zu freigegebenem Code und Wissen. Nutze nur bereitgestellte PatchPony-MCP-Tools. Führe niemals Schreiboperationen, Shell-Befehle, Git-Operationen, Netzwerkaufrufe oder Änderungen aus. Wenn die verfügbaren Quellen nicht reichen, sage das klar. Erfinde keine Dateien, Ergebnisse oder Berechtigungen. Wenn du Source-Ergebnisse verwendest, belege jede konkrete Aussage unmittelbar im Format [projekt:pfad:Lzeile] anhand der vom Tool gelieferten citation-Werte. Erfinde niemals Zitate. Antworte auf Deutsch und knapp.",
+          "systemMessage": "Du bist der PatchPony-Wissensassistent. Bei `knowledge-question` beantwortest du ausschließlich Fragen zu freigegebenem Wissen. Bei `knowledge-maintenance` erzeugst du ausschließlich einen kleinen, nachvollziehbaren Pflegevorschlag mit Zielseite, Motivation und vorgeschlagenen semantischen Operationen; kennzeichne ihn klar als Entwurf, der Owner- und Human-Approval benötigt. In beiden Fällen: Nutze nur bereitgestellte PatchPony-MCP-Tools. Der aktuelle Pilot stellt nur Repositoryquellen bereit: Verwende für Recherche immer `source.search` und anschließend bei Bedarf `source.read`; verwende keine Knowledge-Vault-Tools. Die Initialprojekt-ID ist nur Startkontext, keine Recherchegrenze. Wenn eine Frage ausdrücklich ein anderes Projekt nennt oder projektübergreifend ist, rufe zuerst `projects.list` auf. Verwende für `source.search` und `source.read` anschließend ausschließlich eine vom Tool gelistete Projekt-ID; nie eine vom Nutzer erfundene. Bei unklarem Zielprojekt frage nach. Bei Fragen nach durchsuchbaren, verfügbaren oder freigegebenen Projekten rufe `projects.list` auf und nenne ausschließlich dessen Ergebnis. Führe niemals Schreiboperationen, Shell-Befehle, Git-Operationen, Netzwerkaufrufe oder Änderungen aus. Wenn die verfügbaren Quellen nicht reichen, sage das klar. Erfinde keine Dateien, Ergebnisse oder Berechtigungen. Wenn du Source-Ergebnisse verwendest, belege jede konkrete Aussage unmittelbar im Format [projekt:pfad:Lzeile] anhand der vom Tool gelieferten citation-Werte. Erfinde niemals Zitate. Antworte auf Deutsch und knapp.",
           "returnIntermediateSteps": true,
           "maxIterations": 6
         }
@@ -87,11 +87,12 @@
         "includeTools": [
           "runtime.status",
           "runtime.validate_correlation",
+          "projects.list",
           "source.search",
           "source.read"
         ],
         "options": {
-          "timeout": 60000
+          "timeout": 120000
         }
       },
       "id": "b411179a-0459-4ff9-bb79-7d779c3fc75a",
@@ -110,7 +111,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const errorMessage = typeof $json.error?.message === 'string' ? $json.error.message : '';\nfunction safeFailure(message) {\n  const normalized = message.toLowerCase();\n  if (normalized.includes('max iterations')) return 'PatchPony hat das Recherchelimit erreicht. Bitte grenze die Frage weiter ein und versuche es erneut.';\n  if (normalized.includes('timeout') || normalized.includes('timed out')) return 'PatchPony hat nicht rechtzeitig geantwortet. Bitte versuche es erneut.';\n  if (normalized.includes('abort') || normalized.includes('cancel')) return 'Die PatchPony-Anfrage wurde abgebrochen. Bitte stelle die Frage erneut, wenn du fortfahren möchtest.';\n  if (normalized.includes('rate limit') || normalized.includes('429')) return 'PatchPony ist gerade ausgelastet. Bitte warte kurz und versuche es erneut.';\n  return 'PatchPony konnte diese Anfrage derzeit nicht verarbeiten. Bitte versuche es später erneut.';\n}\nif (errorMessage) return [{ json: { answer: safeFailure(errorMessage), sources: [], toolCalls: [] } }];\nconst answer = typeof $json.output === 'string' && $json.output.trim() ? $json.output.trim() : 'PatchPony konnte keine Antwort erzeugen.';\nconst allowedTools = new Set(['runtime.status', 'runtime.validate_correlation', 'source.search', 'source.read']);\nconst toolCalls = [];\nconst sources = [];\nconst seenTools = new Set();\nconst seenSources = new Set();\nconst safeProject = /^[a-z0-9][a-z0-9-]{0,63}$/;\nconst safePath = /^[A-Za-z0-9._/@+:-]+(?:\\/[A-Za-z0-9._/@+:-]+)*$/;\n\nfunction addTool(value) {\n  if (toolCalls.length < 6 && typeof value === 'string' && allowedTools.has(value) && !seenTools.has(value)) {\n    seenTools.add(value);\n    toolCalls.push(value);\n  }\n}\nfunction addCitation(value) {\n  if (!value || typeof value !== 'object') return;\n  const projectId = value.projectId ?? value.ProjectId;\n  const path = value.path ?? value.Path;\n  const startLine = value.startLine ?? value.StartLine;\n  const endLine = value.endLine ?? value.EndLine;\n  if (typeof projectId !== 'string' || !safeProject.test(projectId) || typeof path !== 'string' || !safePath.test(path) || !Number.isInteger(startLine) || !Number.isInteger(endLine) || startLine < 1 || endLine < startLine) return;\n  const key = `${projectId}:${path}:${startLine}:${endLine}`;\n  if (!seenSources.has(key) && sources.length < 20) {\n    seenSources.add(key);\n    sources.push({ projectId, path, startLine, endLine });\n  }\n}\nfunction inspect(value, depth = 0) {\n  if (depth > 12 || value === null || value === undefined) return;\n  if (typeof value === 'string') {\n    addTool(value);\n    const trimmed = value.trim();\n    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {\n      try { inspect(JSON.parse(trimmed), depth + 1); } catch (_) { /* Tool text need not be JSON. */ }\n    }\n    return;\n  }\n  if (Array.isArray(value)) {\n    for (const item of value) inspect(item, depth + 1);\n    return;\n  }\n  if (typeof value === 'object') {\n    addTool(value.tool ?? value.toolName ?? value.name);\n    addCitation(value.citation ?? value.Citation);\n    for (const nested of Object.values(value)) inspect(nested, depth + 1);\n  }\n}\ninspect($json.intermediateSteps);\nreturn [{ json: { answer, sources, toolCalls } }];"
+        "jsCode": "const errorMessage = typeof $json.error?.message === 'string' ? $json.error.message : '';\nfunction safeFailure(message) {\n  const normalized = message.toLowerCase();\n  if (normalized.includes('max iterations')) return 'PatchPony hat das Recherchelimit erreicht. Bitte grenze die Frage weiter ein und versuche es erneut.';\n  if (normalized.includes('timeout') || normalized.includes('timed out')) return 'PatchPony hat nicht rechtzeitig geantwortet. Bitte versuche es erneut.';\n  if (normalized.includes('abort') || normalized.includes('cancel')) return 'Die PatchPony-Anfrage wurde abgebrochen. Bitte stelle die Frage erneut, wenn du fortfahren möchtest.';\n  if (normalized.includes('rate limit') || normalized.includes('429')) return 'PatchPony ist gerade ausgelastet. Bitte warte kurz und versuche es erneut.';\n  return 'PatchPony konnte diese Anfrage derzeit nicht verarbeiten. Bitte versuche es später erneut.';\n}\nif (errorMessage) return [{ json: { answer: safeFailure(errorMessage), sources: [], toolCalls: [] } }];\nconst answer = typeof $json.output === 'string' && $json.output.trim() ? $json.output.trim() : 'PatchPony konnte keine Antwort erzeugen.';\nconst allowedTools = new Set(['runtime.status', 'runtime.validate_correlation', 'projects.list', 'source.search', 'source.read']);\nconst toolCalls = [];\nconst sources = [];\nconst seenTools = new Set();\nconst seenSources = new Set();\nconst safeProject = /^[a-z0-9][a-z0-9-]{0,63}$/;\nconst safePath = /^[A-Za-z0-9._/@+:-]+(?:\\/[A-Za-z0-9._/@+:-]+)*$/;\n\nfunction addTool(value) {\n  if (toolCalls.length < 6 && typeof value === 'string' && allowedTools.has(value) && !seenTools.has(value)) {\n    seenTools.add(value);\n    toolCalls.push(value);\n  }\n}\nfunction addCitation(value) {\n  if (!value || typeof value !== 'object') return;\n  const projectId = value.projectId ?? value.ProjectId;\n  const path = value.path ?? value.Path;\n  const startLine = value.startLine ?? value.StartLine;\n  const endLine = value.endLine ?? value.EndLine;\n  if (typeof projectId !== 'string' || !safeProject.test(projectId) || typeof path !== 'string' || !safePath.test(path) || !Number.isInteger(startLine) || !Number.isInteger(endLine) || startLine < 1 || endLine < startLine) return;\n  const url = value.url ?? value.Url;\n  const safeUrl = typeof url === 'string' && url.startsWith('https://') && !/\\s/.test(url) ? url : undefined;\n  const key = `${projectId}:${path}:${startLine}:${endLine}`;\n  if (!seenSources.has(key) && sources.length < 20) {\n    seenSources.add(key);\n    sources.push({ projectId, path, startLine, endLine, ...(safeUrl ? { url: safeUrl } : {}) });\n  }\n}\nfunction inspect(value, depth = 0) {\n  if (depth > 12 || value === null || value === undefined) return;\n  if (typeof value === 'string') {\n    addTool(value);\n    const trimmed = value.trim();\n    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {\n      try { inspect(JSON.parse(trimmed), depth + 1); } catch (_) { /* Tool text need not be JSON. */ }\n    }\n    return;\n  }\n  if (Array.isArray(value)) {\n    for (const item of value) inspect(item, depth + 1);\n    return;\n  }\n  if (typeof value === 'object') {\n    addTool(value.tool ?? value.toolName ?? value.name);\n    addCitation(value.citation ?? value.Citation);\n    for (const nested of Object.values(value)) inspect(nested, depth + 1);\n  }\n}\ninspect($(\"Read-only PatchPony Agent\").first().json.intermediateSteps);\nreturn [{ json: { answer, sources, toolCalls } }];"
       },
       "id": "84ad492f-61c5-4e4d-bd09-fcccf8286668",
       "name": "Format safe response",
@@ -135,6 +136,63 @@
         300,
         0
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const retrieval = $json;\r\nconst question = $(\"Validate minimal request\").first().json.question;\r\nconst evidence = (retrieval.intermediateSteps ?? []).map(step => typeof step.observation === \"string\" ? step.observation : \"\").join(\"\\n\\n\").slice(0, 12000);\r\nreturn [{ json: { question, evidence } }];"
+      },
+      "id": "c527389f-07c0-4c51-a96b-a5f660763b49",
+      "name": "Prepare grounded answer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"Nutzerfrage:\\n\" + $json.question + \"\\n\\nVerifizierte PatchPony-Quellen:\\n\" + $json.evidence }}",
+        "options": {
+          "systemMessage": "Du formulierst die finale PatchPony-Antwort ausschließlich aus den bereitgestellten, verifizierten Quellen. Antworte direkt, kurz und auf Deutsch. Wenn die Quellen nicht reichen, sage das klar. Erfinde keine Fakten oder Zitate. Nenne Quellen im Format [projekt:pfad:Lzeile].",
+          "maxIterations": 1
+        }
+      },
+      "id": "955004ab-2ef7-4e31-991c-7218ca87e192",
+      "name": "Formulate grounded answer",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-oss:120b",
+          "mode": "list",
+          "cachedResultName": "gpt-oss:120b"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "aa5946e5-59ef-4234-8ea0-6c6718cbdd22",
+      "name": "destination.one answer model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        280,
+        220
+      ],
+      "credentials": {
+        "openAiApi": {
+          "name": "destination.one OpenAI-compatible"
+        }
+      }
     }
   ],
   "connections": {
@@ -164,7 +222,7 @@
       "main": [
         [
           {
-            "node": "Format safe response",
+            "node": "Prepare grounded answer",
             "type": "main",
             "index": 0
           }
@@ -199,6 +257,39 @@
           {
             "node": "Respond to Open WebUI",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare grounded answer": {
+      "main": [
+        [
+          {
+            "node": "Formulate grounded answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formulate grounded answer": {
+      "main": [
+        [
+          {
+            "node": "Format safe response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "destination.one answer model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Formulate grounded answer",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]

@@ -8,8 +8,8 @@ Diese Einrichtung gilt für `n8n.oi.destination.one`. Das Credential ist ausschl
 2. In der PatchPony-Deploy-Umgebung setzen:
 
    ```text
-   PATCHPONY_AUTH__N8N__TOKEN=<zufälliger-n8n-service-token>
-   PATCHPONY_AUTH__N8N__PROJECTS=<kommagetrennte-freigegebene-projekt-ids>
+   PATCHPONY__AUTH__N8N__TOKEN=<zufälliger-n8n-service-token>
+   PATCHPONY__AUTH__N8N__PROJECTS=<kommagetrennte-freigegebene-projekt-ids>
    ```
 
 3. In der geschützten n8n-Umgebung setzen:

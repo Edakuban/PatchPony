@@ -1,0 +1,22 @@
+schemaVersion: 1
+project:
+  id: one-data
+  displayName: one-data
+repository:
+  remoteUrl: https://github.com/audioholic-78/one-data.git
+  defaultBranch: master
+paths:
+  readable:
+    - apps/**
+    - docs/**
+    - packages/**
+    - tools/**
+    - README.md
+    - one-data.slnx
+  writable: []
+  forbidden:
+    - .git/**
+    - .env
+    - .env.*
+    - '**/.env'
+    - '**/.env.*'

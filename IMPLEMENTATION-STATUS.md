@@ -8,7 +8,7 @@ Implementierungsstand fest, bis die jeweilige Iteration abgeschlossen ist.
 
 ## Nächster konkreter Schritt
 
-`I13.7` – `knowledge.patch` als semantisches Werkzeug für freigegebene Markdown- und Frontmatter-Änderungen implementieren.
+`I14.12` – Pilot-Gates, Zielhost-Evidenz und benannte Teilnehmer abwarten.
 
 ## I7 – Sessions, Branches und Git-Worktrees
 
@@ -72,7 +72,7 @@ Implementierungsstand fest, bis die jeweilige Iteration abgeschlossen ist.
 | I0.7 Deployment-Topologie | offen | Lokal zuerst; Produktions-Topologie folgt vor Pilotbetrieb. |
 | I0.8 Projektsprachen/Testumgebung | offen | PatchPony selbst: .NET 10 und xUnit. |
 | I0.9 Aufbewahrung | offen | Vor persistenter Job- und Audit-Datenhaltung entscheiden. |
-| I0.10 Threat Model | offen | Vor Freischaltung von Projektzugriff abschließen. |
+| I0.10 Threat Model | erledigt | Versioniertes Threat Model mit Trust Boundaries, Controls, Annahmen und Pilotgrenzen in `docs/threat-model.md`. |
 | I0.11 ADR-Ordner/Template | erledigt | `docs/adr/`; erste ADR angelegt. |
 | I0.12 Backlog/Labels | offen | GitHub-Labels folgen vor externem Workflow. |
 | I0.13–I0.14 Wissensvault | vorbereitet | Read-only vorgesehen; Vault existiert noch nicht. |
@@ -241,4 +241,28 @@ das lokale Build- und Betriebsfundament.
 | I13.4 | erledigt | Initiales YAML-Frontmatter ist auf 32 KiB, 200 Zeilen und 12 Ebenen begrenzt; Anker/Aliasse und Tags werden abgewiesen, optionale Schemas stammen ausschließlich aus dem Serverkatalog. |
 | I13.5 | erledigt | Default-deny für Nicht-Markdown-Dateien: nur PNG, JPG/JPEG, WEBP, GIF und PDF; 8 MiB je Datei, maximal 100 Dateien und 64 MiB gesamt. Die Vault-Auflistung blendet abgewiesene Dateien aus. |
 | I13.6 | erledigt | Zentrale Content-Policy sperrt Obsidian-Plugins und -Snippets schon vor der Rekursion sowie Skript- und ausführbare Endungen bei List, Read und Search. |
-| I13.7 | nächster Schritt | `knowledge.patch` als semantisches Werkzeug für freigegebene Markdown- und Frontmatter-Änderungen implementieren. |
+| I13.7 | erledigt | Bounded in-memory Proposal für Frontmatter-Felder, Abschnittsersatz und Markdown-Anhang mit SHA-256-Optimistic-Concurrency sowie Frontmatter- und Content-Policy-Validierung; keine Dateischreiboperation oder MCP-Write-Freigabe vor I13.10. |
+| I13.8 | erledigt | Reine, auf maximal 200 übergebene Markdown-Seiten begrenzte Analyse meldet Backlinks bei Umbenennung sowie ausgehende Linkdeltas, eingehende Backlinks und gebrochene Überschriftsfragmente bei Inhaltsänderung; ohne Vault-Zugriff oder Schreiboperation. |
+| I13.9 | erledigt | Serverseitige Bereichsregeln liefern mindestens einen Owner und einen unabhängigen Reviewer; spezifischste Regel gewinnt, fehlende oder gleichwertig überlappende Regeln blockieren default-deny. |
+| I13.10 | erledigt | Aktive Session-Worktrees übernehmen atomar nur validierte Knowledge-Proposals; vor Mutation prüft die Orchestrierung beide Human-Approval-Gates und führt anschließend den bestehenden Bot-Branch-, Commit-, Push- und MR-Pfad mit Bereichsreviewern aus. Kein Merge-Pfad vorhanden. |
+| I13.11 | erledigt | **PatchPony · Knowledge** trennt read-only Wissensfragen von `/knowledge-maintain`-Pflegeaufträgen; n8n erhält nur ausgewählte Read-Tools und liefert bei Pflege ausschließlich einen gekennzeichneten Entwurf ohne Schreib- oder Git-Pfad. |
+| I13.12 | erledigt | Zwölf versionierte, datenfreie Vorlagen decken Wissensfragen, kleine Pflegeentwürfe und Sicherheitsgrenzen ab; reale Ausführung bleibt bis zur Auswahl freigegebener Pilot-Vault-Beispiele `pending-pilot-sample-selection`. |
+| I13.13 | erledigt | Reviewer-geschützter, flüchtiger Knowledge-Trail erfasst Lese-/Linkoperationen, Linkdeltas und aufgelöste Owner/Reviewer ausschließlich als prozessgebundene HMAC-Fingerprints sowie Zähler und Revisionen; keine Vault-Inhalte, Pfade, Suchtexte oder Namen. |
+
+## I14 – Produktionshärtung und Pilotbetrieb
+
+| Paket | Status | Stand |
+|---|---|---|
+| I14.1 | erledigt | Reproduzierbarer Debian-13-Baselineablauf mit explizitem Key-SSH-Gate, Updates, AppArmor, auditd und NTP; nur Betreiber führt `apply` auf dem vorgesehenen Host aus und dokumentiert den anschließenden Auditlauf. |
+| I14.2 | erledigt | Dedizierter `patchpony-sandbox`-Rootless-Daemon mit UID/GID-Range-, cgroup-v2- und Systemd-Gates; private Worker-Unit erhält nur Rootless-Socket und Session-Mount, Docker-Group und rootful Daemon bleiben ausgeschlossen. |
+| I14.3 | erledigt | Default-drop nftables lässt nur SSH sowie 80/443 zu; Rootless-Gateway bindet nur Loopback, PostgreSQL bleibt im internen Daten-Netz und Host-Caddy ist der einzige öffentliche HTTPS-Proxy. |
+| I14.4 | erledigt | Isolierte, ausführbare Restore-Rehearsal erzeugt einen Custom-Archive-Dump, prüft Checksumme/Inhalt, stellt ihn in eine frische PostgreSQL-Instanz wieder her und räumt alle temporären Docker-Ressourcen auf; sie liest keine `.env` und berührt keine Betriebsdaten. |
+| I14.5 | erledigt | Kontrolliertes, sekretfreies Runbook und Host-Skript validieren vollständige 0600-Kandidatendateien, koordinieren PostgreSQL-, n8n-, Worker-, Modell-, Zoho-, Open-WebUI- und GitHub-Rotation, ersetzen lokale Dateien atomar und prüfen/rollen lokale Dienste bei Fehlern zurück. |
+| I14.6 | erledigt | Privater Prometheus-/Grafana-Stack mit versionierten PostgreSQL-Workflowqueries, Dashboard und Alarmregeln für Queue, Jobs, Sessions, Exporter und Datenbankgröße; nur Grafana ist loopback-gebunden. |
+| I14.7 | erledigt | Dry-run-first, bestätigte und batchbegrenzte PostgreSQL-Retention für operative Daten plus Container-Logrotation und täglicher Rootless-Systemd-Timer; Backups, Secrets, Quellen und nicht geschlossene Sessions bleiben ausgeschlossen. |
+| I14.8 | erledigt | CI prüft Dependency-Änderungen, direkte/transitive NuGet-Schwachstellen und Gateway-/Worker-Container; CycloneDX-SBOMs und Scanreport werden 30 Tage als Artefakte aufbewahrt, Dependabot erstellt wöchentliche Updatevorschläge. |
+| I14.9 | vorbereitet | Lokale-only k6-Szenarien für parallele Health-, REST- und MCP-Anfragen sowie Rate-Limit-Schutz sind versioniert; die echte isolierte Pilotausführung benötigt noch aggregierte Evidenz und bleibt daher bewusst pending. |
+| I14.10 | erledigt mit Pilot-Blockern | Security-Review ordnet jede Kernbedrohung konkreten Kontrollen und Tests zu; Hostaudits, echter Load-Test, Snapshot-Restore und Alarmzustellung bleiben zwingende Evidenz vor I14.12. |
+| I14.11 | erledigt | Incident-/Recovery-Runbook und reversible Kill-Switch stoppen nur Gateway und privaten Worker mit explizitem Zwei-Personen-Re-Enable; Datenbank, Volumes, Backups und Host-Grenzen bleiben unangetastet. |
+| I14.12 | blockiert durch externe Freigabe/Evidenz | Enges Pilot-Runbook für PatchPony/VocaVid-Testprojekte, Entry-Gates, Abbruchkriterien und datensparsame Evidenzvorlage sind vorbereitet; tatsächliche Host-/Integrationsausführung und benannte Teilnehmer fehlen. |
+| I14.13 | blockiert durch I14.12-Daten | Aggregate-only Auswertungs- und V1.1-Backlogvorlage priorisiert Safety P0 vor Ausbau; sie wird erst nach echtem Pilotzeitraum mit Evidenz gefüllt. |

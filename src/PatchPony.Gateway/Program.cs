@@ -7,6 +7,7 @@ using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Server;
 using PatchPony.Core.Application;
 using PatchPony.Core.Common;
+using PatchPony.Core.Knowledge;
 using PatchPony.Gateway;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,6 +74,7 @@ builder.Services.AddOpenApi("v1", options =>
 builder.Services.AddMcpServer()
     .WithHttpTransport(options => options.SessionMode = HttpServerSessionMode.Stateless)
     .WithTools<RuntimeMcpTools>()
+    .WithTools<ProjectCatalogMcpTools>()
     .WithTools<ProjectSourceMcpTools>()
     .WithTools<KnowledgeMcpTools>()
     .WithTools<ConfigMcpTools>()
@@ -82,6 +84,7 @@ builder.Services.AddSingleton<ICorrelationContext, CorrelationContext>();
 builder.Services.AddSingleton<RuntimeStatusService>();
 builder.Services.AddSingleton<IGatewayLogRedactor, GatewayLogRedactor>();
 builder.Services.AddSingleton<IAccessDecisionAudit, AccessDecisionAudit>();
+builder.Services.AddSingleton<IKnowledgeAuditSink, KnowledgeAuditTrail>();
 builder.Services.AddSingleton<ZohoWebhookValidator>();
 builder.Services.AddSingleton<ZohoTicketNormalizer>();
 builder.Services.AddSingleton<ZohoTicketProjectResolver>();
@@ -110,6 +113,7 @@ pilotSources.Validate();
 builder.Services.AddSingleton(pilotSources);
 builder.Services.AddSingleton<PilotSourceCatalog>();
 builder.Services.AddSingleton<KnowledgeContractCatalog>();
+builder.Services.AddSingleton<KnowledgeOwnershipPolicyService>();
 var gatewayLimits = new GatewayRequestLimits();
 gatewayLimits.Validate();
 builder.Services.AddSingleton(gatewayLimits);

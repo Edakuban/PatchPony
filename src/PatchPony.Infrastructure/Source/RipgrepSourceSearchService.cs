@@ -14,10 +14,11 @@ public sealed record SourceSearchResult(IReadOnlyList<SourceSearchMatch> Matches
 public sealed class RipgrepSourceSearchService
 {
     private const int MaximumQueryCharacters = 256;
+    private const int MaximumCandidateEntries = 1_000;
     private const int MaximumCandidateFiles = 200;
     private const long MaximumCandidateFileBytes = 1_048_576;
-    private const int MaximumResults = 100;
-    private const int MaximumMatchesPerFile = 20;
+    private const int MaximumResults = 20;
+    private const int MaximumMatchesPerFile = 5;
     private const int MaximumOutputBytes = 256 * 1024;
     private static readonly TimeSpan SearchTimeout = TimeSpan.FromSeconds(10);
 
@@ -118,11 +119,14 @@ public sealed class RipgrepSourceSearchService
     {
         try
         {
-            foreach (var fullPath in Directory.EnumerateFileSystemEntries(directory))
+            foreach (var fullPath in Directory
+                .EnumerateFileSystemEntries(directory)
+                .OrderBy(GetSearchPriority)
+                .ThenBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (state.ExaminedEntries == MaximumCandidateFiles)
+                if (state.ExaminedEntries == MaximumCandidateEntries)
                 {
                     state.IsTruncated = true;
                     return Result.Success();
@@ -157,6 +161,12 @@ public sealed class RipgrepSourceSearchService
 
                 if (new FileInfo(authorizedFile.Value!.FullPath).Length <= MaximumCandidateFileBytes)
                 {
+                    if (files.Count == MaximumCandidateFiles)
+                    {
+                        state.IsTruncated = true;
+                        return Result.Success();
+                    }
+
                     files.Add(authorizedFile.Value.RelativePath);
                 }
             }
@@ -296,6 +306,40 @@ public sealed class RipgrepSourceSearchService
     private static bool IsReparsePoint(string path) =>
         (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
 
+    private static int GetSearchPriority(string fullPath)
+    {
+        var name = Path.GetFileName(fullPath);
+        var normalizedName = name.ToLowerInvariant();
+
+        if (normalizedName.StartsWith("readme", StringComparison.Ordinal) ||
+            normalizedName.StartsWith("getting-started", StringComparison.Ordinal) ||
+            normalizedName.StartsWith("quickstart", StringComparison.Ordinal))
+        {
+            return 0;
+        }
+
+        if (normalizedName is "docs" or "doc" or "documentation" ||
+            normalizedName.EndsWith(".md", StringComparison.Ordinal))
+        {
+            return 1;
+        }
+
+        return IsTestPath(fullPath) ? 3 : 2;
+    }
+
+    private static bool IsTestPath(string path)
+    {
+        var segments = path
+            .Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)
+            .Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+
+        return segments.Any(segment =>
+            segment.Equals("test", StringComparison.OrdinalIgnoreCase) ||
+            segment.Equals("tests", StringComparison.OrdinalIgnoreCase) ||
+            segment.Equals("__tests__", StringComparison.OrdinalIgnoreCase) ||
+            segment.Equals("spec", StringComparison.OrdinalIgnoreCase) ||
+            segment.Equals("specs", StringComparison.OrdinalIgnoreCase));
+    }
     private static void TryKill(Process process)
     {
         if (!process.HasExited)

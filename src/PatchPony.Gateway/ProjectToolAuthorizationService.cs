@@ -7,6 +7,7 @@ namespace PatchPony.Gateway;
 public sealed record ProjectToolAccessRequest(string Tool, IReadOnlyDictionary<string, string?> Parameters);
 
 public sealed record ProjectToolAccessDecision(string ProjectId, string Tool, string RequiredScope);
+public sealed record ProjectCatalogAccessDecision(string Tool, string RequiredScope);
 
 public sealed class ProjectToolAuthorizationService(IAccessDecisionAudit audit, ICorrelationContext correlations)
 {
@@ -14,11 +15,12 @@ public sealed class ProjectToolAuthorizationService(IAccessDecisionAudit audit, 
     private static readonly IReadOnlyDictionary<string, ToolRequirement> Tools =
         new Dictionary<string, ToolRequirement>(StringComparer.Ordinal)
         {
+            ["projects.list"] = new(PatchPonyScopes.ProjectRead, [], []),
             ["project.tree"] = new(PatchPonyScopes.ProjectRead, [], ["path", "depth"]),
             ["skills.list"] = new(PatchPonyScopes.SkillsRead, [], []),
             ["skills.read"] = new(PatchPonyScopes.SkillsRead, ["id"], ["id"]),
             ["source.search"] = new(PatchPonyScopes.SourceRead, ["query"], ["query"]),
-            ["source.read"] = new(PatchPonyScopes.SourceRead, ["path"], ["path"]),
+            ["source.read"] = new(PatchPonyScopes.SourceRead, ["path"], ["path", "maxLines"]),
             ["knowledge.tree"] = new(PatchPonyScopes.KnowledgeRead, [], ["path", "depth"]),
             ["knowledge.search"] = new(PatchPonyScopes.KnowledgeRead, ["query"], ["query"]),
             ["knowledge.read"] = new(PatchPonyScopes.KnowledgeRead, ["path"], ["path"]),
@@ -70,6 +72,37 @@ public sealed class ProjectToolAuthorizationService(IAccessDecisionAudit audit, 
         return result;
     }
 
+    public Result<ProjectCatalogAccessDecision> AuthorizeCatalog(ClaimsPrincipal user, ProjectToolAccessRequest request)
+    {
+        var requiredScope = Tools.TryGetValue(request.Tool, out var knownTool) ? knownTool.RequiredScope : null;
+        Result<ProjectCatalogAccessDecision> result;
+
+        if (knownTool is null || !string.Equals(request.Tool, "projects.list", StringComparison.Ordinal) ||
+            !PatchPonyAuthorization.HasScope(user, knownTool.RequiredScope) ||
+            request.Parameters.Count != 0)
+        {
+            result = Result<ProjectCatalogAccessDecision>.Failure(new DomainError("authorization.forbidden", "The requested project catalog access is not permitted."));
+        }
+        else
+        {
+            result = Result<ProjectCatalogAccessDecision>.Success(new ProjectCatalogAccessDecision(request.Tool, knownTool.RequiredScope));
+        }
+
+        audit.Record(new AccessDecisionAuditEvent(
+            DateTimeOffset.UtcNow,
+            correlations.Current.Value,
+            "policy.tool",
+            result.IsSuccess ? "allowed" : "rejected",
+            AccessDecisionAudit.Subject(user),
+            AccessDecisionAudit.AuthenticationMode(user),
+            "POST",
+            $"{ApiV1Endpoints.Prefix}/projects/access",
+            null,
+            Tools.ContainsKey(request.Tool) ? request.Tool : null,
+            requiredScope));
+
+        return result;
+    }
     public static bool HasProjectAccess(ClaimsPrincipal user, string projectId) =>
         user.Claims
             .Where(claim => claim.Type is "project" or "projects")

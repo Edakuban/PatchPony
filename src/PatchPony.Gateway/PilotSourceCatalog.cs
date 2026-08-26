@@ -30,9 +30,10 @@ public sealed class PilotSourceProjectOptions
     public string Id { get; init; } = string.Empty;
     public string CheckoutRoot { get; init; } = string.Empty;
     public string ManifestFile { get; init; } = string.Empty;
+    public string CitationUrlTemplate { get; init; } = string.Empty;
 }
 
-public sealed record PilotSourceProject(string Id, SourceReader Reader, RipgrepSourceSearchService Search);
+public sealed record PilotSourceProject(string Id, string DisplayName, SourceReader Reader, RipgrepSourceSearchService Search, Uri RemoteUri, string DefaultBranch, string CitationUrlTemplate);
 
 public sealed class PilotSourceCatalog
 {
@@ -62,11 +63,13 @@ public sealed class PilotSourceCatalog
 
             var resolver = new ProjectPathResolver(configured.CheckoutRoot);
             var access = new ProjectPathAccessService(resolver, policy.Value!);
-            catalog.Add(configured.Id, new PilotSourceProject(configured.Id, new SourceReader(access), new RipgrepSourceSearchService(resolver, access)));
+            catalog.Add(configured.Id, new PilotSourceProject(configured.Id, manifest.Value.Project.DisplayName, new SourceReader(access), new RipgrepSourceSearchService(resolver, access), manifest.Value.Repository.RemoteUri, manifest.Value.Repository.DefaultBranch, configured.CitationUrlTemplate));
         }
 
         projects = catalog;
     }
 
     public bool TryGet(string projectId, out PilotSourceProject project) => projects.TryGetValue(projectId, out project!);
+
+    public IReadOnlyList<PilotSourceProject> List() => projects.Values.OrderBy(project => project.Id, StringComparer.Ordinal).ToArray();
 }

@@ -17,7 +17,7 @@ public sealed class RuntimeMcpTools(RuntimeStatusService status, ICorrelationCon
         Idempotent = true,
         Destructive = false,
         OpenWorld = false,
-        UseStructuredContent = true)]
+        UseStructuredContent = false)]
     [Description("Returns the current PatchPony runtime mode and request correlation identifier without accessing projects, files, networks, or external tools.")]
     public RuntimeStatus GetStatus() => status.Get();
 
@@ -27,7 +27,7 @@ public sealed class RuntimeMcpTools(RuntimeStatusService status, ICorrelationCon
         ReadOnly = true,
         Idempotent = true,
         Destructive = false,
-        OpenWorld = false)]
+        OpenWorld = false, UseStructuredContent = false)]
     [Description("Validates a correlation identifier and returns the common PatchPony error contract on invalid input.")]
     public CallToolResult ValidateCorrelation([Description("Correlation identifier to validate.")] string correlationId)
     {

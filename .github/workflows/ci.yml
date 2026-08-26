@@ -15,10 +15,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test-containers:
-    name: Build, test, and build containers
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0
+
+  build-test-containers:
+    name: Build, test, scan and attest containers
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
       - name: Check out source
@@ -32,6 +46,12 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore PatchPony.slnx
 
+      - name: Scan direct and transitive NuGet dependencies
+        run: |
+          mkdir -p artifacts
+          dotnet package list PatchPony.slnx --vulnerable --include-transitive --format json > artifacts/nuget-vulnerabilities.json
+          jq -e '[.. | objects | .vulnerabilities? // empty | .[]?] | length == 0' artifacts/nuget-vulnerabilities.json
+
       - name: Build
         run: dotnet build PatchPony.slnx --configuration Release --no-restore
 
@@ -41,10 +61,12 @@ jobs:
       - name: Validate local Compose and Caddy TLS configuration
         env:
           POSTGRES_PASSWORD: ci-postgres-password
+          PATCHPONY_AUTH__N8N__TOKEN: ci-n8n-token
           PATCHPONY_WORKER__CLAIMSIGNINGKEY: cGF0Y2hwb255LWNpLXdvcmtlci1jbGFpbS1zaWduaW5nLWtleS0zMmJ5dGVz
         run: |
           docker compose --env-file .env.example config --quiet
           docker run --rm --mount type=bind,source=${{ github.workspace }}/deploy/caddy/Caddyfile.local,target=/etc/caddy/Caddyfile,readonly caddy:2.11.4-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
       - name: Build gateway container
         run: docker build --file src/PatchPony.Gateway/Dockerfile --tag patchpony-gateway:ci .
 
@@ -75,3 +97,28 @@ jobs:
           scanners: vuln
           timeout: 10m0s
           skip-setup-trivy: true
+
+      - name: Generate gateway CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: patchpony-gateway:ci
+          format: cyclonedx-json
+          output-file: artifacts/patchpony-gateway.cdx.json
+
+      - name: Generate worker CycloneDX SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: patchpony-worker:ci
+          format: cyclonedx-json
+          output-file: artifacts/patchpony-worker.cdx.json
+
+      - name: Upload supply-chain artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: patchpony-supply-chain-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            artifacts/nuget-vulnerabilities.json
+            artifacts/patchpony-gateway.cdx.json
+            artifacts/patchpony-worker.cdx.json

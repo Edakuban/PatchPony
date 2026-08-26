@@ -1,0 +1,18 @@
+[Unit]
+Description=PatchPony private sandbox worker (rootless Docker)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/patchpony/worker.env
+Environment=DOCKER_HOST=unix:///run/user/%U/docker.sock
+ExecStartPre=/usr/bin/docker info --format {{json .SecurityOptions}}
+ExecStart=/usr/bin/docker run --rm --name patchpony-sandbox-worker --user %U:%G --read-only --cap-drop=ALL --security-opt no-new-privileges:true --network none --mount type=bind,src=/run/user/%U/docker.sock,dst=/run/user/%U/docker.sock,rw,bind-propagation=rprivate --mount type=bind,src=${PATCHPONY_SESSION_STORAGE_ROOT},dst=/sessions,rw,bind-propagation=rprivate --env DOCKER_HOST=unix:///run/user/%U/docker.sock --env PATCHPONY__WORKER__SANDBOXWORKSPACE__STORAGEROOT=/sessions --env PATCHPONY__WORKER__ID --env PATCHPONY__WORKER__CLAIMSIGNINGKEY ${PATCHPONY_WORKER_IMAGE}
+ExecStop=/usr/bin/docker rm --force patchpony-sandbox-worker
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

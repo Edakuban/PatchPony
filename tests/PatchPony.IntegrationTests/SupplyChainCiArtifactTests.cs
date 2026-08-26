@@ -1,0 +1,8 @@
+namespace PatchPony.IntegrationTests;
+public sealed class SupplyChainCiArtifactTests
+{
+ [Fact] public void Ci_FailsOnDependencyAndImageVulnerabilitiesAndPublishesSboms()
+ { var root=FindRepositoryRoot(); var ci=File.ReadAllText(Path.Combine(root,".github","workflows","ci.yml")); var dependabot=File.ReadAllText(Path.Combine(root,".github","dependabot.yml"));
+ Assert.Contains("dependency-review-action",ci,StringComparison.Ordinal); Assert.Contains("dotnet package list PatchPony.slnx --vulnerable --include-transitive --format json",ci,StringComparison.Ordinal); Assert.Contains("jq -e",ci,StringComparison.Ordinal); Assert.Contains("aquasecurity/trivy-action",ci,StringComparison.Ordinal); Assert.Contains("severity: HIGH,CRITICAL",ci,StringComparison.Ordinal); Assert.Contains("anchore/sbom-action",ci,StringComparison.Ordinal); Assert.Contains("cyclonedx-json",ci,StringComparison.Ordinal); Assert.Contains("actions/upload-artifact",ci,StringComparison.Ordinal); Assert.Contains("retention-days: 30",ci,StringComparison.Ordinal); Assert.Contains("package-ecosystem: nuget",dependabot,StringComparison.Ordinal); Assert.Contains("package-ecosystem: docker",dependabot,StringComparison.Ordinal); Assert.Contains("package-ecosystem: github-actions",dependabot,StringComparison.Ordinal); }
+ static string FindRepositoryRoot(){for(var d=new DirectoryInfo(AppContext.BaseDirectory);d is not null;d=d.Parent)if(File.Exists(Path.Combine(d.FullName,"PLAN.md")))return d.FullName;throw new DirectoryNotFoundException();}
+}

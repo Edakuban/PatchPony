@@ -1,4 +1,4 @@
-"""PatchPony read-only Open WebUI Pipe.
+"""PatchPony Knowledge Open WebUI Pipe.
 
 Import this source as an administrator-managed Pipe Function in Open WebUI.
 Only a minimal, controlled request reaches n8n; n8n owns subsequent agent
@@ -9,6 +9,7 @@ import asyncio
 import hashlib
 import re
 from typing import Any
+from urllib.parse import quote, urlparse
 from uuid import uuid4
 
 import httpx
@@ -29,18 +30,22 @@ class Pipe:
             default="",
             description="Administrator-controlled project ID for this read-only pilot pipe.",
         )
+        SOURCE_URL_TEMPLATE: str = Field(
+            default="",
+            description="Optional admin-only HTTPS URL template for source links. Use {path}, {startLine}, and {endLine}.",
+        )
         REQUEST_TIMEOUT_SECONDS: int = Field(
-            default=60,
+            default=120,
             ge=1,
-            le=120,
-            description="Maximum time to wait for the synchronous n8n webhook response.",
+            le=180,
+            description="Maximum time to wait for the synchronous n8n webhook response; multi-project research may require several model and MCP steps.",
         )
 
     def __init__(self) -> None:
         self.valves = self.Valves()
 
     def pipes(self) -> list[dict[str, str]]:
-        return [{"id": "patchpony-readonly", "name": "PatchPony · Read-only"}]
+        return [{"id": "patchpony-knowledge", "name": "PatchPony · Knowledge"}]
 
     async def pipe(
         self,
@@ -51,9 +56,12 @@ class Pipe:
             return "PatchPony ist noch nicht vollständig konfiguriert. Bitte Pipe-Einstellungen durch einen Administrator prüfen lassen."
 
         question = self._latest_user_question(body)
+        intent, request_text = self._classify_request(question)
         requester = self._pseudonymous_requester(__user__)
         if not question:
             return "Bitte stelle eine Frage zu Code oder freigegebenem Wissen."
+        if intent == "knowledge-maintenance" and not request_text:
+            return "Bitte beschreibe nach /knowledge-maintain den gewünschten Pflegeauftrag."
         if requester is None:
             return "PatchPony konnte deine Chat-Identität nicht sicher zuordnen. Bitte melde dich erneut an."
 
@@ -62,7 +70,8 @@ class Pipe:
             "source": "open-webui",
             "projectId": self.valves.DEFAULT_PROJECT_ID,
             "requester": requester,
-            "question": question,
+            "intent": intent,
+            "question": request_text,
         }
 
         try:
@@ -100,6 +109,14 @@ class Pipe:
         )
 
     @staticmethod
+    def _classify_request(question: str) -> tuple[str, str]:
+        marker = "/knowledge-maintain"
+        normalized = question.lower()
+        if normalized == marker or normalized.startswith(marker + " "):
+            request = question[len(marker):].strip()
+            return "knowledge-maintenance", request
+        return "knowledge-question", question
+    @staticmethod
     def _pseudonymous_requester(user: dict[str, Any] | None) -> dict[str, str] | None:
         user_id = user.get("id") if isinstance(user, dict) else None
         if not isinstance(user_id, str) or not user_id.strip():
@@ -121,8 +138,7 @@ class Pipe:
                 return content.strip()[:12_000]
         return ""
 
-    @staticmethod
-    def _answer(response: httpx.Response) -> str:
+    def _answer(self, response: httpx.Response) -> str:
         try:
             data = response.json()
         except ValueError:
@@ -135,11 +151,25 @@ class Pipe:
         if not isinstance(answer, str) or not answer.strip():
             return "PatchPony konnte keine Antwort erzeugen."
 
-        return Pipe._render_transparency(answer.strip(), data.get("sources"), data.get("toolCalls"))
+        return self._render_transparency(answer.strip(), data.get("sources"), data.get("toolCalls"), self.valves.SOURCE_URL_TEMPLATE)
 
     @staticmethod
-    def _render_transparency(answer: str, raw_sources: Any, raw_tools: Any) -> str:
-        sources: list[tuple[str, str, int, int]] = []
+    def _render_source(project_id: str, path: str, start_line: int, end_line: int, template: str) -> str:
+        label = f"{project_id}:{path}:L{start_line}" if start_line == end_line else f"{project_id}:{path}:L{start_line}-L{end_line}"
+        candidate = template.strip()
+        if not candidate:
+            return f"- `{label}`"
+        try:
+            url = candidate.format(path=quote(path, safe="/"), startLine=start_line, endLine=end_line)
+            parsed = urlparse(url)
+            if parsed.scheme != "https" or not parsed.netloc:
+                return f"- `{label}`"
+        except (KeyError, ValueError):
+            return f"- `{label}`"
+        return f"- [{label}]({url})"
+    @staticmethod
+    def _render_transparency(answer: str, raw_sources: Any, raw_tools: Any, source_url_template: str = "") -> str:
+        sources: list[tuple[str, str, int, int, str | None]] = []
         seen_sources: set[tuple[str, str, int, int]] = set()
         if isinstance(raw_sources, list):
             for item in raw_sources[:20]:
@@ -155,22 +185,23 @@ class Pipe:
                     continue
                 if not isinstance(start_line, int) or not isinstance(end_line, int) or start_line < 1 or end_line < start_line:
                     continue
+                url = item.get("url")
                 source = (project_id, path, start_line, end_line)
                 if source not in seen_sources:
                     seen_sources.add(source)
-                    sources.append(source)
+                    sources.append((*source, url if isinstance(url, str) and urlparse(url).scheme == "https" else None))
 
         tools: list[str] = []
         if isinstance(raw_tools, list):
             for tool in raw_tools[:10]:
-                if tool in {"runtime.status", "runtime.validate_correlation", "source.search", "source.read"} and tool not in tools:
+                if tool in {"runtime.status", "runtime.validate_correlation", "source.search", "source.read", "knowledge.tree", "knowledge.search", "knowledge.read", "knowledge.links"} and tool not in tools:
                     tools.append(tool)
 
         sections = [answer]
         if sources:
             rendered_sources = "\n".join(
-                f"- `{project_id}:{path}:L{start_line}`" if start_line == end_line else f"- `{project_id}:{path}:L{start_line}-L{end_line}`"
-                for project_id, path, start_line, end_line in sources
+                Pipe._render_source(project_id, path, start_line, end_line, url or source_url_template)
+                for project_id, path, start_line, end_line, url in sources
             )
             sections.append(f"Quellen (verifizierte Tool-Ergebnisse):\n{rendered_sources}")
         if tools:
